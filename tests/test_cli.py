@@ -54,11 +54,13 @@ class PolicyTests(unittest.TestCase):
             self.assertEqual(main(['a']), 0)
 
     @patch('oss_license_checker.cli.metadata.distributions')
-    def test_legacy_requires_exact_policy(self, distributions):
+    def test_legacy_spdx_identifier_is_validated(self, distributions):
         distributions.return_value = [distribution('a', legacy='MIT')]
-        self.assertEqual(collect()[0][0]['status'], 'unknown')
+        self.assertEqual(collect()[0][0]['status'], 'allowed')
         self.assertEqual(collect(allow=['MIT'])[0][0]['status'], 'allowed')
         self.assertEqual(collect(deny=['MIT'])[0][0]['status'], 'denied')
+        distributions.return_value = [distribution('a', legacy='mit'), distribution('b', legacy='MIT License')]
+        self.assertEqual([r['status'] for r in collect()[0]], ['allowed', 'unknown'])
 
 
 if __name__ == '__main__':

@@ -131,8 +131,6 @@ def collect(names=None, allow=(), deny=(), fail_unknown=False, recursive=False, 
             try:
                 if effective_license.upper() in {"UNKNOWN", "UNLICENSED", "NONE", "NOASSERTION"}:
                     raise ValueError("unknown license")
-                if not override and source == "License" and license_value not in set(allow) | set(deny):
-                    raise ValueError("unverified legacy license")
                 status = "allowed" if evaluate(effective_license, set(allow), set(deny)) else "denied"
                 reason = "A license alternative is permitted" if status == "allowed" else "No license alternative is permitted by the policy"
             except ValueError as exc:

@@ -10,6 +10,25 @@
 
 Python環境にインストールされたパッケージのライセンスを一覧化し、CIで許可・禁止ルールを検査するCLIです。Python 3.11以上。パッケージのコードは実行せず、ローカルの配布メタデータを読み取ります。依存指定の解析には `packaging` を使用します。
 
+## 最初の検査まで
+
+Python 3.11以上のLinux・macOSでは、次の手順でRequestsとその依存を試せます。
+
+```bash
+git clone https://github.com/rsasaki0109/oss_license_checker.git
+cd oss_license_checker
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install . requests
+oss-license-checker requests --recursive \
+  --config examples/validation/requests/policy.toml \
+  --format html --output licenses.html
+```
+
+`licenses.html` をブラウザで開いて結果を確認してください。検証用ポリシーは設定例なので、自分のプロジェクトでは必要なライセンス条件を確認して調整します。
+
+[実プロジェクト3件の検証結果と再現手順](docs/VALIDATION.md) · [リリース手順](docs/RELEASING.md) · [MIT License](LICENSE)
+
 ## インストールと実行
 
 ```bash
@@ -201,7 +220,7 @@ oss-license-checker your-package --recursive --config pyproject.toml \
 
 ## 判定の範囲
 
-`License-Expression` を優先し、次に古い `License`、ライセンス関連の `Classifier` を証拠として記録します。古い `License` は正規化後の許可・禁止リストとの完全一致でのみ判定し、自由文とClassifierは不明として扱います。ライセンス本文の同定、法的な互換性判定、NOTICEの作成は行いません。`allowed` は指定ポリシーに適合する意味です。
+`License-Expression` を優先し、次に古い `License`、ライセンス関連の `Classifier` を証拠として記録します。古い `License` も公式SPDX識別子・式として検証できれば判定します。自由文とClassifierは不明として扱います。ライセンス本文の同定、法的な互換性判定、NOTICEの作成は行いません。`allowed` は指定ポリシーに適合する意味です。
 
 ### SPDX識別子の検証（v0.4.0以降）
 

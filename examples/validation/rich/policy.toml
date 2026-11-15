@@ -1,0 +1,12 @@
+allow = ["MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "MPL-2.0", "PSF-2.0"]
+fail-unknown = true
+
+[overrides."markdown-it-py"]
+license = "MIT"
+version = "4.3.0"
+reason = "Reviewed distributed MIT permission and disclaimer in markdown_it_py-4.3.0.dist-info/licenses/LICENSE; SHA-256 4a2260d6e2cd0f5a151a1e86dbfe7d3ed552b1e2beabf9941c1ba5c49cbce484"
+
+[overrides."mdurl"]
+license = "MIT"
+version = "0.1.2"
+reason = "Reviewed distributed MIT permission and disclaimer in mdurl-0.1.2.dist-info/LICENSE; SHA-256 7c605df6e28667a9603118e98274f64a49ce3eed0d26fccce9534a345e0ef955"
