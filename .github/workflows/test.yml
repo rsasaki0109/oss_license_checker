@@ -6,16 +6,23 @@ jobs:
     strategy:
       matrix:
         python: ['3.11', '3.12', '3.13']
+        packaging: ['latest']
+        include:
+          - python: '3.11'
+            packaging: '24.2'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
       - run: python -m pip install -e .
+      - name: Install minimum supported packaging
+        if: matrix.packaging != 'latest'
+        run: python -m pip install packaging==${{ matrix.packaging }}
       - run: python -m unittest discover -s tests -v
       - name: Generate license report
         run: oss-license-checker oss-license-checker --recursive --format html --output licenses.html
       - uses: actions/upload-artifact@v4
         with:
-          name: license-report-python-${{ matrix.python }}
+          name: license-report-python-${{ matrix.python }}-packaging-${{ matrix.packaging }}
           path: licenses.html

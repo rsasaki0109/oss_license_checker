@@ -8,6 +8,7 @@ import re
 import sys
 from importlib import metadata
 from pathlib import Path
+from packaging.licenses import canonicalize_license_expression
 
 from .project import dependency_names, load_policy
 from .report import render_html
@@ -30,8 +31,27 @@ def license_info(meta):
     return ("; ".join(values), "Classifier") if values else ("UNKNOWN", "missing")
 
 
+def normalize_rules(rules):
+    """Policy entries name one license, optionally qualified by one exception."""
+    normalized = []
+    for rule in rules:
+        try:
+            value = canonicalize_license_expression(rule)
+        except ValueError as exc:
+            raise ValueError(f"Invalid policy entry {rule!r}: {exc}") from exc
+        tokens = value.split()
+        if not (len(tokens) == 1 or (len(tokens) == 3 and tokens[1] == "WITH")) or any(
+            token in {"AND", "OR", "(", ")"} or "(" in token or ")" in token for token in tokens
+        ):
+            raise ValueError(f"Policy entry must name one license or license WITH exception: {rule!r}")
+        normalized.append(value)
+    return normalized
+
+
 def evaluate(expression, allow, deny):
-    """Evaluate a small, explicit SPDX grammar. Unsupported syntax fails closed."""
+    """Validate SPDX identifiers before evaluating policy alternatives."""
+    expression = canonicalize_license_expression(expression)
+    allow, deny = set(normalize_rules(allow)), set(normalize_rules(deny))
     tokens = re.findall(r"\(|\)|[^\s()]+", expression)
     position = 0
 
@@ -56,6 +76,8 @@ def evaluate(expression, allow, deny):
             token += " WITH " + tokens[position]
             position += 1
         base = token.split(" WITH ")[0]
+        if base.startswith("LicenseRef-") and token not in allow and token not in deny and base not in deny:
+            raise ValueError(f"Custom license requires an explicit policy entry: {base}")
         return token not in deny and base not in deny and (not allow or token in allow)
 
     def both():
@@ -83,6 +105,7 @@ def evaluate(expression, allow, deny):
 
 
 def collect(names=None, allow=(), deny=(), fail_unknown=False, recursive=False):
+    allow, deny = normalize_rules(allow), normalize_rules(deny)
     installed = {normalize(d.metadata["Name"]): d for d in metadata.distributions() if d.metadata["Name"]}
     selected = dependency_names(installed, names) if recursive else sorted({normalize(n) for n in names} if names else installed)
     rows = []
@@ -92,6 +115,7 @@ def collect(names=None, allow=(), deny=(), fail_unknown=False, recursive=False):
         dist = installed[name]
         license_value, source = license_info(dist.metadata)
         status = "unknown"
+        reason = "License metadata is missing"
         # Classifier labels and free-form license bodies need manual review.
         if source != "missing" and source != "Classifier":
             try:
@@ -100,10 +124,13 @@ def collect(names=None, allow=(), deny=(), fail_unknown=False, recursive=False):
                 if source == "License" and license_value not in set(allow) | set(deny):
                     raise ValueError("unverified legacy license")
                 status = "allowed" if evaluate(license_value, set(allow), set(deny)) else "denied"
-            except ValueError:
-                pass
+                reason = "A license alternative is permitted" if status == "allowed" else "No license alternative is permitted by the policy"
+            except ValueError as exc:
+                reason = str(exc)
+        elif source == "Classifier":
+            reason = "Classifier labels require manual review"
         rows.append({"name": dist.metadata["Name"], "version": dist.version,
-                     "license": license_value, "source": source, "status": status})
+                     "license": license_value, "source": source, "status": status, "reason": reason})
     failed = any(r["status"] == "denied" or (fail_unknown and r["status"] == "unknown") for r in rows)
     return rows, failed
 
@@ -115,13 +142,13 @@ def render(rows, format, *, policy=None, scope=None):
         return json.dumps(rows, ensure_ascii=False, indent=2) + "\n"
     if format == "csv":
         stream = io.StringIO(newline="")
-        writer = csv.DictWriter(stream, fieldnames=["name", "version", "license", "source", "status"])
+        writer = csv.DictWriter(stream, fieldnames=["name", "version", "license", "source", "status", "reason"])
         writer.writeheader()
         writer.writerows(rows)
         return stream.getvalue()
-    return "\n".join(["NAME\tVERSION\tLICENSE\tSTATUS"] + [
-        "\t".join(str(r[k]).replace("\n", " ").replace("\r", " ").replace("\t", " ")
-                  for k in ("name", "version", "license", "status")) for r in rows]) + "\n"
+    return "\n".join(["NAME\tVERSION\tLICENSE\tSTATUS\tREASON"] + [
+        "\t".join(str(r.get(k, "")).replace("\n", " ").replace("\r", " ").replace("\t", " ")
+                  for k in ("name", "version", "license", "status", "reason")) for r in rows]) + "\n"
 
 
 def main(argv=None):
@@ -139,6 +166,7 @@ def main(argv=None):
         policy = load_policy(args.config) if args.config else {}
         allow = args.allow if args.allow is not None else policy.get("allow", [])
         deny = args.deny if args.deny is not None else policy.get("deny", [])
+        allow, deny = normalize_rules(allow), normalize_rules(deny)
         fail_unknown = args.fail_unknown if args.fail_unknown is not None else policy.get("fail-unknown", False)
         rows, failed = collect(args.packages, allow, deny, fail_unknown, args.recursive)
         scope = None

@@ -49,11 +49,12 @@ def render_html(rows, policy=None, scope=None):
         '<tr>' + ''.join(f'<td>{esc(row[key])}</td>' for key in ("name", "version"))
         + f'<td class="license"><code>{esc(row["license"])}</code></td>'
         + f'<td class="muted">{esc(row["source"])}</td>'
-        + f'<td><span class="badge {row["status"] if row["status"] in {"allowed", "denied", "unknown"} else "unknown"}">{esc(row["status"])}</span></td></tr>'
+        + f'<td><span class="badge {row["status"] if row["status"] in {"allowed", "denied", "unknown"} else "unknown"}">{esc(row["status"])}</span></td>'
+        + f'<td>{esc(row.get("reason", ""))}</td></tr>'
         for row in rows
     )
     if not rows:
-        body = '<tr><td colspan="5">No installed packages matched this scan.</td></tr>'
+        body = '<tr><td colspan="6">No installed packages matched this scan.</td></tr>'
     verdict = "Policy check failed" if failed else "Policy check passed"
     return f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
@@ -72,7 +73,7 @@ def render_html(rows, policy=None, scope=None):
 </dl></section><h2>Package inventory</h2><div class="table-wrap"><table>
 <caption>{len(rows)} packages · Metadata evidence is preserved below.</caption>
 <thead><tr><th scope="col">Package</th><th scope="col">Version</th><th scope="col">License</th>
-<th scope="col">Metadata source</th><th scope="col">Status</th></tr></thead><tbody>{body}</tbody>
+<th scope="col">Metadata source</th><th scope="col">Status</th><th scope="col">Reason</th></tr></thead><tbody>{body}</tbody>
 </table></div><footer>Allowed means compliance with the policy above, not a legal compatibility assessment.
 Unknown metadata requires review of the distribution's LICENSE and NOTICE files.
 OR expressions pass when at least one alternative is permitted.
