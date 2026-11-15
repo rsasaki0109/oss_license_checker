@@ -22,9 +22,20 @@ jobs:
       - run: python -m unittest discover -s tests -v
       - name: Generate license report
         run: oss-license-checker oss-license-checker --recursive --format html --output licenses.html --license-bundle licenses.zip
+      - name: Generate Markdown report
+        if: ${{ !cancelled() }}
+        run: oss-license-checker oss-license-checker --recursive --format markdown --output licenses.md
+      - name: Publish job summary
+        if: ${{ !cancelled() }}
+        run: |
+          if [ -f licenses.md ]; then
+            cat licenses.md >> "$GITHUB_STEP_SUMMARY"
+          fi
       - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
         with:
           name: license-report-python-${{ matrix.python }}-packaging-${{ matrix.packaging }}
           path: |
             licenses.html
             licenses.zip
+            licenses.md

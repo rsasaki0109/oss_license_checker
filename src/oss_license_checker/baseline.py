@@ -7,6 +7,7 @@ import re
 from packaging.utils import canonicalize_name
 
 from .report import render_html
+from .markdown import render_markdown
 
 
 FIELDS = ("version", "license", "source", "status", "effective_license")
@@ -54,6 +55,8 @@ def compare(before, after):
 
 
 def render_comparison(rows, changes, format, *, policy, scope, fail_on_change):
+    if format == "markdown":
+        return render_markdown(rows, policy, scope, changes=changes, fail_on_change=fail_on_change)
     if format == "json":
         return json.dumps({"packages": rows, "changes": changes}, ensure_ascii=False, indent=2) + "\n"
     if format == "html":

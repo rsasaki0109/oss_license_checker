@@ -95,6 +95,32 @@ oss-license-checker your-package --recursive --config pyproject.toml \
 
 違反で終了コード1になった場合もレポートは出力します。CIでは出力ファイルをartifactとして保存すると、結果をチームで共有できます。ポリシー未指定、または `--fail-unknown` 未指定なら、不明ライセンスがあってもチェックは通る点に注意してください。本リポジトリのGitHub ActionsもHTMLレポートをartifactとして保存します。
 
+## MarkdownとGitHub Actions Job Summary
+
+```bash
+oss-license-checker your-package --recursive --config pyproject.toml \
+  --format markdown --output licenses.md
+```
+
+Markdownレポートには件数、判定、適用ポリシー、各パッケージの元のライセンス・判定に使った値・確認理由を含みます。`--baseline` と組み合わせると変更前後の差分も表示します。メタデータ中のMarkdown記号やHTMLは文字として出力します。
+
+GitHub Actionsでは次のステップで結果をJob Summaryに表示できます。違反時もレポートを掲載し、CLIの終了コードをそのまま返します。
+
+```yaml
+- name: Check dependency licenses
+  shell: bash
+  run: |
+    check_status=0
+    oss-license-checker your-package --recursive --config pyproject.toml \
+      --format markdown --output licenses.md || check_status=$?
+    if [ -f licenses.md ]; then
+      cat licenses.md >> "$GITHUB_STEP_SUMMARY"
+    fi
+    exit "$check_status"
+```
+
+本リポジトリのCIもJob SummaryとartifactにMarkdownを保存します。CLI自体はGitHubへの投稿やコメント送信を行いません。
+
 ## LICENSE・NOTICEの収集
 
 ```bash

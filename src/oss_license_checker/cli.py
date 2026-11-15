@@ -16,6 +16,7 @@ from .report import render_html
 from .baseline import compare, load_baseline, render_comparison
 from .overrides import validate_overrides
 from .bundle import create_bundle
+from .markdown import render_markdown
 
 
 def normalize(name):
@@ -146,6 +147,8 @@ def collect(names=None, allow=(), deny=(), fail_unknown=False, recursive=False, 
 
 
 def render(rows, format, *, policy=None, scope=None):
+    if format == "markdown":
+        return render_markdown(rows, policy, scope)
     if format == "html":
         return render_html(rows, policy, scope)
     if format == "json":
@@ -164,7 +167,7 @@ def render(rows, format, *, policy=None, scope=None):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("packages", nargs="*", help="Installed package names (default: entire environment)")
-    parser.add_argument("--format", choices=["table", "json", "csv", "html"], default="table")
+    parser.add_argument("--format", choices=["table", "json", "csv", "html", "markdown"], default="table")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--license-bundle", type=Path, help="Collect installed LICENSE/NOTICE evidence and manifest into a ZIP")
     parser.add_argument("--fail-missing-license-files", action="store_true", help="Fail on missing evidence; requires --license-bundle")
