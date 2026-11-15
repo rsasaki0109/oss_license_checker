@@ -1,0 +1,83 @@
+name: OSS License Checker
+description: Inspect installed Python dependency licenses and save a Markdown report and license evidence
+inputs:
+  python:
+    description: Python 3.11+ executable in the environment to inspect
+    default: python
+  packages:
+    description: Installed root packages, one per line (empty scans the whole environment)
+    default: ''
+  recursive:
+    description: Include transitive dependencies of the specified packages
+    default: 'false'
+  config:
+    description: Policy TOML path relative to the caller's working directory
+    default: ''
+  baseline:
+    description: Previous JSON inventory path
+    default: ''
+  fail-unknown:
+    description: true, false, or inherit the configured policy
+    default: inherit
+  fail-on-change:
+    description: Fail on baseline changes (requires baseline)
+    default: 'false'
+  fail-missing-license-files:
+    description: Fail if installed license evidence is missing
+    default: 'false'
+  output-directory:
+    description: Parent directory for a unique report directory
+    default: license-reports
+  upload-artifact:
+    description: Upload the report and license bundle
+    default: 'true'
+  artifact-name:
+    description: Artifact name; use a unique name per matrix job
+    default: license-report
+outputs:
+  report-path:
+    description: Absolute Markdown report path
+    value: ${{ steps.scan.outputs.report-path }}
+  bundle-path:
+    description: Absolute license bundle path
+    value: ${{ steps.scan.outputs.bundle-path }}
+  exit-code:
+    description: CLI exit code (0 passed, 1 check failed, 2 execution error)
+    value: ${{ steps.scan.outputs.exit-code }}
+runs:
+  using: composite
+  steps:
+    - name: Install checker in the selected Python environment
+      shell: bash
+      env:
+        CHECKER_PYTHON: ${{ inputs.python }}
+      run: '"$CHECKER_PYTHON" -m pip install "$GITHUB_ACTION_PATH"'
+    - name: Scan installed packages
+      id: scan
+      shell: bash
+      env:
+        CHECKER_PYTHON: ${{ inputs.python }}
+        CHECKER_PACKAGES: ${{ inputs.packages }}
+        CHECKER_RECURSIVE: ${{ inputs.recursive }}
+        CHECKER_CONFIG: ${{ inputs.config }}
+        CHECKER_BASELINE: ${{ inputs.baseline }}
+        CHECKER_FAIL_UNKNOWN: ${{ inputs.fail-unknown }}
+        CHECKER_FAIL_ON_CHANGE: ${{ inputs.fail-on-change }}
+        CHECKER_FAIL_MISSING: ${{ inputs.fail-missing-license-files }}
+        CHECKER_OUTPUT_DIRECTORY: ${{ inputs.output-directory }}
+      run: '"$CHECKER_PYTHON" "$GITHUB_ACTION_PATH/scripts/run_action.py"'
+    - name: Save license artifacts
+      if: ${{ !cancelled() && inputs.upload-artifact == 'true' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: |
+          ${{ steps.scan.outputs.report-path }}
+          ${{ steps.scan.outputs.bundle-path }}
+        if-no-files-found: warn
+    - name: Preserve scan exit code
+      if: ${{ !cancelled() && steps.scan.outputs.exit-code != '' }}
+      shell: bash
+      env:
+        SCAN_EXIT_CODE: ${{ steps.scan.outputs.exit-code }}
+      run: exit "$SCAN_EXIT_CODE"

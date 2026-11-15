@@ -95,6 +95,35 @@ oss-license-checker your-package --recursive --config pyproject.toml \
 
 違反で終了コード1になった場合もレポートは出力します。CIでは出力ファイルをartifactとして保存すると、結果をチームで共有できます。ポリシー未指定、または `--fail-unknown` 未指定なら、不明ライセンスがあってもチェックは通る点に注意してください。本リポジトリのGitHub ActionsもHTMLレポートをartifactとして保存します。
 
+## GitHub Actionとして使う
+
+```yaml
+steps:
+  - uses: actions/checkout@v4
+  - uses: actions/setup-python@v5
+    with:
+      python-version: '3.12'
+  - run: python -m pip install .
+  - uses: rsasaki0109/oss_license_checker@main
+    with:
+      packages: your-package
+      recursive: 'true'
+      config: pyproject.toml
+      artifact-name: dependency-licenses
+```
+
+Linux・macOSのbash環境とPython 3.11以上を対象とするcomposite actionです。本番では `@main` をレビュー済みコミットSHAに固定してください。検査したい依存は事前にインストールします。Actionは指定したPython環境に本ツールと必要な `packaging` をインストールするため、環境全体の検査にはこれらも含まれます。`packages` と `recursive` で対象を絞れます。
+
+- `python`：実行するPythonのパス（既定 `python`）。仮想環境を使う場合はそのPythonを指定します。
+- `packages`：インストール済みのルート名を1行に1つ指定します。空なら全環境。extrasも指定できます。`recursive` は既定 `false`。
+- `config` / `baseline`：呼び出し元の作業ディレクトリを基準とする設定・基準JSONパス。
+- `fail-unknown`：`inherit`（既定、設定ファイルに従う）・`true`・`false`。
+- `fail-on-change` / `fail-missing-license-files`：既定 `false`。CLIと同じ終了条件です。
+- `output-directory`：出力先の親ディレクトリ。既定 `license-reports`。実行ごとに固有のサブディレクトリを作ります。
+- `upload-artifact`：既定 `true`。MarkdownとLICENSE・NOTICEのZIPを保存します。matrixでは `artifact-name` をジョブごとに変えてください（既定 `license-report`）。
+
+Job Summaryに結果を掲載し、違反時もartifactを保存した後でステップを失敗させます。実行エラーではレポートが作られない場合があります。outputsは `report-path`・`bundle-path`（絶対パス）と `exit-code`（0 / 1 / 2）です。アップロードにはGitHub Actionsのartifactサービスを使います。ソースコードはartifactに含めません。
+
 ## MarkdownとGitHub Actions Job Summary
 
 ```bash

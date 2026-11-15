@@ -20,6 +20,13 @@ jobs:
         if: matrix.packaging != 'latest'
         run: python -m pip install packaging==${{ matrix.packaging }}
       - run: python -m unittest discover -s tests -v
+      - name: Test composite action
+        uses: ./
+        with:
+          packages: packaging
+          fail-unknown: 'true'
+          fail-missing-license-files: 'true'
+          upload-artifact: 'false'
       - name: Generate license report
         run: oss-license-checker oss-license-checker --recursive --format html --output licenses.html --license-bundle licenses.zip
       - name: Generate Markdown report
