@@ -18,6 +18,8 @@ Richの依存である `markdown-it-py==4.3.0` と `mdurl==0.1.2` はClassifier�
 
 本ツール自身のLICENSEはユーザーの指定に従いMITとし、配布メタデータにSPDX式とLICENSEファイルを含めました。
 
+既存CIのAction動作確認は、Classifierしか持たない `packaging==24.2` を厳格な検査で通す想定になっていました。成功ケースの対象を本ツールのwheel（MIT）に変更しました。Classifierのみなら不明とする動作は回帰テストで確認します。
+
 ## 再現方法
 
 リポジトリのルートで実行します。`PROJECT` を `requests` / `httpx` / `rich` に切り替え、別々の仮想環境を使ってください。

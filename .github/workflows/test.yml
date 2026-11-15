@@ -23,7 +23,7 @@ jobs:
       - name: Test composite action
         uses: ./
         with:
-          packages: packaging
+          packages: oss-license-checker
           fail-unknown: 'true'
           fail-missing-license-files: 'true'
           upload-artifact: 'false'

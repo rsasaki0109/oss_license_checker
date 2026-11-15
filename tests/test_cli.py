@@ -62,6 +62,15 @@ class PolicyTests(unittest.TestCase):
         distributions.return_value = [distribution('a', legacy='mit'), distribution('b', legacy='MIT License')]
         self.assertEqual([r['status'] for r in collect()[0]], ['allowed', 'unknown'])
 
+    @patch('oss_license_checker.cli.metadata.distributions')
+    def test_classifier_only_metadata_stays_unknown_under_strict_policy(self, distributions):
+        package = distribution('legacy')
+        package.metadata['Classifier'] = 'License :: OSI Approved :: Apache Software License'
+        distributions.return_value = [package]
+        rows, failed = collect(fail_unknown=True)
+        self.assertTrue(failed)
+        self.assertEqual(rows[0]['status'], 'unknown')
+
 
 if __name__ == '__main__':
     unittest.main()
