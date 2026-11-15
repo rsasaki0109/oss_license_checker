@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "oss-license-checker"
-version = "0.5.0"
+version = "0.6.0"
 description = "Inspect installed Python dependency licenses and enforce CI policies"
 requires-python = ">=3.11"
 dependencies = ["packaging>=24.2"]

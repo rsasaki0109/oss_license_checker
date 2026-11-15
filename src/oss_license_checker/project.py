@@ -3,6 +3,7 @@
 import tomllib
 from packaging.requirements import InvalidRequirement, Requirement
 from packaging.utils import canonicalize_name
+from .overrides import validate_overrides
 
 
 def load_policy(path):
@@ -19,7 +20,7 @@ def load_policy(path):
         policy = document
     if not isinstance(policy, dict):
         raise ValueError("Policy must be a TOML table")
-    unknown = policy.keys() - {"allow", "deny", "fail-unknown"}
+    unknown = policy.keys() - {"allow", "deny", "fail-unknown", "overrides"}
     if unknown:
         raise ValueError(f"Unknown policy keys: {', '.join(sorted(unknown))}")
     for key in ("allow", "deny"):
@@ -28,6 +29,8 @@ def load_policy(path):
             raise ValueError(f"Policy '{key}' must be an array of nonempty strings")
     if "fail-unknown" in policy and not isinstance(policy["fail-unknown"], bool):
         raise ValueError("Policy 'fail-unknown' must be a boolean")
+    if "overrides" in policy:
+        validate_overrides(policy["overrides"])
     return policy
 
 

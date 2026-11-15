@@ -9,7 +9,7 @@ from packaging.utils import canonicalize_name
 from .report import render_html
 
 
-FIELDS = ("version", "license", "source", "status")
+FIELDS = ("version", "license", "source", "status", "effective_license")
 
 
 def index_inventory(rows):
@@ -17,6 +17,8 @@ def index_inventory(rows):
         raise ValueError("Baseline packages must be a JSON array")
     result = {}
     for row in rows:
+        if isinstance(row, dict):
+            row = {"effective_license": row.get("license"), **row}
         if not isinstance(row, dict) or any(not isinstance(row.get(key), str) for key in ("name", *FIELDS)):
             raise ValueError("Baseline rows require string name, version, license, source and status")
         if not re.fullmatch(r"[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?", row["name"]):

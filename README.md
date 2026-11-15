@@ -48,6 +48,25 @@ oss-license-checker your-package --recursive --config pyproject.toml
 
 専用のTOMLファイルではテーブル見出しを省略し、同じ3つのキーをトップレベルに置きます。設定は `--config` で明示した場合のみ読み込みます。CLIの `--allow` / `--deny` は対応する設定リストを置き換えます。`--fail-unknown` / `--no-fail-unknown` で設定値を上書きできます。未知のキーや型の誤りは終了コード2になります。
 
+### 確認済みライセンスをパッケージ単位で設定（v0.6.0以降）
+
+メタデータにライセンスがない場合など、配布物のLICENSEを確認した結果を記録できます。以下は架空のパッケージに対する設定例です。
+
+```toml
+[tool.oss-license-checker.overrides."legacy-package"]
+license = "MIT"
+version = "1.2.3"
+reason = "1.2.3の配布物のLICENSEを確認。レビュー記録: LEGAL-123"
+```
+
+専用のTOMLでは `[overrides."legacy-package"]` にします。`license`・`version`・`reason` はすべて必須です。`license` は有効なSPDX式、`version` は確認した単一のバージョン、`reason` は確認の根拠を記載します。パッケージ名は正規化して照合します。
+
+- 検査対象のバージョンが変わると、再確認が必要な設定エラー（終了コード2）にします。バージョン範囲やワイルドカードは指定できません。
+- 設定したライセンスを通常の許可・禁止ルールで判定します。ライセンスの補正だけでは自動的に許可しません。独自の `LicenseRef-` も明示的なルールが必要です。
+- `license` / `source` には元のメタデータを残し、判定に使った値を `effective_license`、確認の根拠を `override_reason` として全形式で出力します。HTMLでも元の値と補正後の値を並べて表示します。
+- 差分検査は `effective_license` の変更も検出します。確認理由の文章だけの変更は差分にしません。v0.5.0以前のJSONも引き続き基準に使えます。
+- 検査対象外のパッケージには適用しません。設定の構文・ライセンス名・バージョン・キーの誤りは、対象外でも検出します。
+
 ## CIでの利用
 
 ```bash
@@ -94,7 +113,7 @@ oss-license-checker your-package --recursive --config pyproject.toml \
 ```
 
 - `added` / `removed` / `changed` を検出し、変更前後の値と変更フィールドを表示します。名前は `-` / `_` / `.` と大文字小文字を正規化して照合します。
-- バージョン、ライセンスの元表記、メタデータ取得元、判定ステータスを比較します。説明文の `reason` は比較しません。表記だけのライセンス変更もレビュー対象になります。
+- バージョン、ライセンスの元表記、判定に使った `effective_license`、メタデータ取得元、判定ステータスを比較します。説明文の `reason` / `override_reason` は比較しません。表記だけのライセンス変更もレビュー対象になります。
 - 差分モードのJSONは `{"packages": [...], "changes": [...]}` です。`packages` は現在の全検査結果、`changes` は差分です。通常のJSON一覧と、前回の差分JSONのどちらも基準にできます。追加は `before: null`、削除は `after: null` になります。
 - ターミナルとCSVは差分のみを表示します。HTMLは差分と現在の全一覧を表示します。削除だけの場合も差分に含みます。
 - 通常は変更を報告するだけです。`--fail-on-change` を追加すると、どの比較フィールドの変更・追加・削除でも終了コード1になります。レポートは失敗時も保存します。

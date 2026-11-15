@@ -23,7 +23,7 @@ class BaselineTests(unittest.TestCase):
         after = [row('added'), row('changed', version='2.0', license='GPL-3.0-only', status='denied')]
         changes = compare(before, after)
         self.assertEqual([item['change'] for item in changes], ['added', 'changed', 'removed'])
-        self.assertEqual(changes[1]['fields'], ['version', 'license', 'status'])
+        self.assertEqual(changes[1]['fields'], ['version', 'license', 'status', 'effective_license'])
         self.assertEqual(changes[1]['before']['license'], 'MIT')
         self.assertEqual(changes[1]['after']['license'], 'GPL-3.0-only')
 

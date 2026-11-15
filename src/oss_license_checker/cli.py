@@ -9,10 +9,12 @@ import sys
 from importlib import metadata
 from pathlib import Path
 from packaging.licenses import canonicalize_license_expression
+from packaging.version import Version
 
 from .project import dependency_names, load_policy
 from .report import render_html
 from .baseline import compare, load_baseline, render_comparison
+from .overrides import validate_overrides
 
 
 def normalize(name):
@@ -105,8 +107,9 @@ def evaluate(expression, allow, deny):
     return result
 
 
-def collect(names=None, allow=(), deny=(), fail_unknown=False, recursive=False):
+def collect(names=None, allow=(), deny=(), fail_unknown=False, recursive=False, overrides=None):
     allow, deny = normalize_rules(allow), normalize_rules(deny)
+    overrides = validate_overrides(overrides if overrides is not None else {})
     installed = {normalize(d.metadata["Name"]): d for d in metadata.distributions() if d.metadata["Name"]}
     selected = dependency_names(installed, names) if recursive else sorted({normalize(n) for n in names} if names else installed)
     rows = []
@@ -115,23 +118,28 @@ def collect(names=None, allow=(), deny=(), fail_unknown=False, recursive=False):
             raise ValueError(f"Package is not installed: {name}")
         dist = installed[name]
         license_value, source = license_info(dist.metadata)
+        override = overrides.get(name)
+        if override and Version(dist.version) != Version(override["version"]):
+            raise ValueError(f"Override for {name} was reviewed for {override['version']}, but installed version is {dist.version}; review the license again")
+        effective_license = override["license"] if override else license_value
         status = "unknown"
         reason = "License metadata is missing"
         # Classifier labels and free-form license bodies need manual review.
-        if source != "missing" and source != "Classifier":
+        if override or (source != "missing" and source != "Classifier"):
             try:
-                if license_value.upper() in {"UNKNOWN", "UNLICENSED", "NONE", "NOASSERTION"}:
+                if effective_license.upper() in {"UNKNOWN", "UNLICENSED", "NONE", "NOASSERTION"}:
                     raise ValueError("unknown license")
-                if source == "License" and license_value not in set(allow) | set(deny):
+                if not override and source == "License" and license_value not in set(allow) | set(deny):
                     raise ValueError("unverified legacy license")
-                status = "allowed" if evaluate(license_value, set(allow), set(deny)) else "denied"
+                status = "allowed" if evaluate(effective_license, set(allow), set(deny)) else "denied"
                 reason = "A license alternative is permitted" if status == "allowed" else "No license alternative is permitted by the policy"
             except ValueError as exc:
                 reason = str(exc)
         elif source == "Classifier":
             reason = "Classifier labels require manual review"
         rows.append({"name": dist.metadata["Name"], "version": dist.version,
-                     "license": license_value, "source": source, "status": status, "reason": reason})
+                     "license": license_value, "source": source, "status": status, "reason": reason,
+                     "effective_license": effective_license, "override_reason": override["reason"] if override else ""})
     failed = any(r["status"] == "denied" or (fail_unknown and r["status"] == "unknown") for r in rows)
     return rows, failed
 
@@ -143,13 +151,13 @@ def render(rows, format, *, policy=None, scope=None):
         return json.dumps(rows, ensure_ascii=False, indent=2) + "\n"
     if format == "csv":
         stream = io.StringIO(newline="")
-        writer = csv.DictWriter(stream, fieldnames=["name", "version", "license", "source", "status", "reason"])
+        writer = csv.DictWriter(stream, fieldnames=["name", "version", "license", "source", "status", "reason", "effective_license", "override_reason"])
         writer.writeheader()
         writer.writerows(rows)
         return stream.getvalue()
-    return "\n".join(["NAME\tVERSION\tLICENSE\tSTATUS\tREASON"] + [
+    return "\n".join(["NAME\tVERSION\tLICENSE\tSTATUS\tREASON\tEFFECTIVE_LICENSE\tOVERRIDE_REASON"] + [
         "\t".join(str(r.get(k, "")).replace("\n", " ").replace("\r", " ").replace("\t", " ")
-                  for k in ("name", "version", "license", "status", "reason")) for r in rows]) + "\n"
+                  for k in ("name", "version", "license", "status", "reason", "effective_license", "override_reason")) for r in rows]) + "\n"
 
 
 def main(argv=None):
@@ -176,7 +184,7 @@ def main(argv=None):
         deny = args.deny if args.deny is not None else policy.get("deny", [])
         allow, deny = normalize_rules(allow), normalize_rules(deny)
         fail_unknown = args.fail_unknown if args.fail_unknown is not None else policy.get("fail-unknown", False)
-        rows, failed = collect(args.packages, allow, deny, fail_unknown, args.recursive)
+        rows, failed = collect(args.packages, allow, deny, fail_unknown, args.recursive, policy.get("overrides", {}))
         scope = None
         if args.packages:
             scope = ", ".join(args.packages) + (" (including transitive dependencies)" if args.recursive else " (selected packages only)")

@@ -46,7 +46,7 @@ class ReportTests(unittest.TestCase):
 
     def test_metadata_scope_and_policy_are_escaped(self):
         payload = '<script>alert("unsafe")</script><img src=x onerror="alert(1)"> & 日本語'
-        values = {key: payload for key in ('name', 'version', 'license', 'source', 'status', 'reason')}
+        values = {key: payload for key in ('name', 'version', 'license', 'source', 'status', 'reason', 'effective_license', 'override_reason')}
         text = render([values], 'html', scope=payload, policy={'allow': [payload], 'deny': [payload]})
         document = Document(text)
         self.assertIn(payload, ''.join(document.content))

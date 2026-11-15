@@ -49,13 +49,15 @@ def render_html(rows, policy=None, scope=None, *, changes=None, fail_on_change=F
     body = "".join(
         '<tr>' + ''.join(f'<td>{esc(row[key])}</td>' for key in ("name", "version"))
         + f'<td class="license"><code>{esc(row["license"])}</code></td>'
+        + f'<td class="license"><code>{esc(row.get("effective_license", row["license"]))}</code></td>'
         + f'<td class="muted">{esc(row["source"])}</td>'
         + f'<td><span class="badge {row["status"] if row["status"] in {"allowed", "denied", "unknown"} else "unknown"}">{esc(row["status"])}</span></td>'
-        + f'<td>{esc(row.get("reason", ""))}</td></tr>'
+        + f'<td>{esc(row.get("reason", ""))}'
+        + (f'<p><strong>Reviewed override:</strong> {esc(row["override_reason"])}</p>' if row.get("override_reason") else '') + '</td></tr>'
         for row in rows
     )
     if not rows:
-        body = '<tr><td colspan="6">No installed packages matched this scan.</td></tr>'
+        body = '<tr><td colspan="7">No installed packages matched this scan.</td></tr>'
     verdict = "Policy check failed" if failed else "Policy check passed"
     comparison = ""
     if changes is not None:
@@ -90,7 +92,7 @@ Current packages are always re-evaluated against the current policy.</caption>
 <dt>Unknown licenses</dt><dd>{'Fail the check' if fail_unknown else 'Report for review; do not fail the check'}</dd>
 </dl></section>{comparison}<h2>Package inventory</h2><div class="table-wrap"><table>
 <caption>{len(rows)} packages · Metadata evidence is preserved below.</caption>
-<thead><tr><th scope="col">Package</th><th scope="col">Version</th><th scope="col">License</th>
+<thead><tr><th scope="col">Package</th><th scope="col">Version</th><th scope="col">Metadata license</th><th scope="col">Effective license</th>
 <th scope="col">Metadata source</th><th scope="col">Status</th><th scope="col">Reason</th></tr></thead><tbody>{body}</tbody>
 </table></div><footer>Allowed means compliance with the policy above, not a legal compatibility assessment.
 Unknown metadata requires review of the distribution's LICENSE and NOTICE files.
