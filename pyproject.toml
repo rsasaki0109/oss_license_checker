@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "oss-license-checker"
+version = "0.1.0"
+description = "Inspect installed Python dependency licenses and enforce CI policies"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+oss-license-checker = "oss_license_checker.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

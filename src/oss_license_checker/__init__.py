@@ -1,0 +1,1 @@
+"""Python dependency license inventory."""
