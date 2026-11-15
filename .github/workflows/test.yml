@@ -21,8 +21,10 @@ jobs:
         run: python -m pip install packaging==${{ matrix.packaging }}
       - run: python -m unittest discover -s tests -v
       - name: Generate license report
-        run: oss-license-checker oss-license-checker --recursive --format html --output licenses.html
+        run: oss-license-checker oss-license-checker --recursive --format html --output licenses.html --license-bundle licenses.zip
       - uses: actions/upload-artifact@v4
         with:
           name: license-report-python-${{ matrix.python }}-packaging-${{ matrix.packaging }}
-          path: licenses.html
+          path: |
+            licenses.html
+            licenses.zip

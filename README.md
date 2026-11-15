@@ -95,6 +95,29 @@ oss-license-checker your-package --recursive --config pyproject.toml \
 
 違反で終了コード1になった場合もレポートは出力します。CIでは出力ファイルをartifactとして保存すると、結果をチームで共有できます。ポリシー未指定、または `--fail-unknown` 未指定なら、不明ライセンスがあってもチェックは通る点に注意してください。本リポジトリのGitHub ActionsもHTMLレポートをartifactとして保存します。
 
+## LICENSE・NOTICEの収集
+
+```bash
+oss-license-checker your-package --recursive --config pyproject.toml \
+  --license-bundle third-party-licenses.zip --format html --output licenses.html
+
+# ファイルが見つからないパッケージもCIエラーにする
+oss-license-checker your-package --recursive \
+  --license-bundle third-party-licenses.zip --fail-missing-license-files
+```
+
+インストール済みの配布物のファイル一覧を使って、LICENSE / LICENCE / COPYING / NOTICE / COPYRIGHTとその拡張子・接尾辞付きファイルを収集します。PEP 639の `.dist-info/licenses/` 以下のファイルと、メタデータの `License-File` に対応するファイルも対象です。推移依存の選択やライセンス補正設定と併用できます。
+
+ZIPには以下を含みます。
+
+- 元のバイト列を保持した証拠ファイル（パッケージ名・バージョンごとのフォルダ）
+- `manifest.json`：検査結果、取得元とZIP内パス、SHA-256、バイト数、未検出の宣言ファイル
+- 各パッケージの `evidence_status`：ファイルがあり宣言されたファイルも揃っていれば `collected`、それ以外は `missing`
+
+通常はファイル欠落をmanifestと標準エラーに記録します。`--fail-missing-license-files` を付けると、収集対象ファイルが1つもないパッケージ、または宣言されたファイルの欠落があれば終了コード1です。NOTICEだけが見つかった場合も収集済みとして扱うため、必要なLICENSE本文が揃っているかは別途確認してください。ライセンスルール違反で終了コード1の場合もZIPは保存します。
+
+読めないファイルや不正なパスは終了コード2です。ZIPは完成後に保存し、収集エラー時は既存のZIPを保持します。ZIP出力先とレポート・設定・基準ファイルは別パスにしてください。ファイル一覧を持たない配布物やeditable installでは検出できないことがあります。ローカルのファイルシステム上の配布物を対象とし、レジストリへの問い合わせやソースコード全体の探索は行いません。この収集結果だけで配布義務の充足を判断するものではありません。本リポジトリのGitHub ActionsでもHTMLとZIPをartifactとして保存します。
+
 ## 前回の結果との差分（v0.5.0以降）
 
 同じ対象・環境・ポリシーで取得したJSONを基準として保存します。
