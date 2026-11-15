@@ -9,6 +9,8 @@ import sys
 from importlib import metadata
 from pathlib import Path
 
+from .project import dependency_names, load_policy
+
 
 def normalize(name):
     return re.sub(r"[-_.]+", "-", name).lower()
@@ -79,9 +81,9 @@ def evaluate(expression, allow, deny):
     return result
 
 
-def collect(names=None, allow=(), deny=(), fail_unknown=False):
+def collect(names=None, allow=(), deny=(), fail_unknown=False, recursive=False):
     installed = {normalize(d.metadata["Name"]): d for d in metadata.distributions() if d.metadata["Name"]}
-    selected = sorted({normalize(n) for n in names} if names else installed)
+    selected = dependency_names(installed, names) if recursive else sorted({normalize(n) for n in names} if names else installed)
     rows = []
     for name in selected:
         if name not in installed:
@@ -124,12 +126,18 @@ def main(argv=None):
     parser.add_argument("packages", nargs="*", help="Installed package names (default: entire environment)")
     parser.add_argument("--format", choices=["table", "json", "csv"], default="table")
     parser.add_argument("--output", type=Path)
-    parser.add_argument("--allow", action="append", default=[], help="Allowed SPDX identifier; repeatable")
-    parser.add_argument("--deny", action="append", default=[], help="Denied SPDX identifier; repeatable")
-    parser.add_argument("--fail-unknown", action="store_true")
+    parser.add_argument("--recursive", action="store_true", help="Include installed transitive dependencies; supports root[extra]")
+    parser.add_argument("--config", type=Path, help="Policy TOML or pyproject.toml (explicit opt-in)")
+    parser.add_argument("--allow", action="append", default=None, help="Allowed SPDX identifier; repeatable; replaces config allow list")
+    parser.add_argument("--deny", action="append", default=None, help="Denied SPDX identifier; repeatable; replaces config deny list")
+    parser.add_argument("--fail-unknown", action=argparse.BooleanOptionalAction, default=None)
     args = parser.parse_args(argv)
     try:
-        rows, failed = collect(args.packages, args.allow, args.deny, args.fail_unknown)
+        policy = load_policy(args.config) if args.config else {}
+        allow = args.allow if args.allow is not None else policy.get("allow", [])
+        deny = args.deny if args.deny is not None else policy.get("deny", [])
+        fail_unknown = args.fail_unknown if args.fail_unknown is not None else policy.get("fail-unknown", False)
+        rows, failed = collect(args.packages, allow, deny, fail_unknown, args.recursive)
         output = render(rows, args.format)
         if args.output:
             args.output.write_text(output, encoding="utf-8")
