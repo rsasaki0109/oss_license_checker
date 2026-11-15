@@ -76,6 +76,31 @@ oss-license-checker your-package --recursive --config pyproject.toml \
 
 違反で終了コード1になった場合もレポートは出力します。CIでは出力ファイルをartifactとして保存すると、結果をチームで共有できます。ポリシー未指定、または `--fail-unknown` 未指定なら、不明ライセンスがあってもチェックは通る点に注意してください。本リポジトリのGitHub ActionsもHTMLレポートをartifactとして保存します。
 
+## 前回の結果との差分（v0.5.0以降）
+
+同じ対象・環境・ポリシーで取得したJSONを基準として保存します。
+
+```bash
+oss-license-checker your-package --recursive --config pyproject.toml \
+  --format json --output baseline.json
+
+# 依存を更新した後、基準との差分を確認
+oss-license-checker your-package --recursive --config pyproject.toml \
+  --baseline baseline.json --format html --output changes.html
+
+# 変更があればCIを止め、JSONでレビュー用の差分を保存
+oss-license-checker your-package --recursive --config pyproject.toml \
+  --baseline baseline.json --fail-on-change --format json --output changes.json
+```
+
+- `added` / `removed` / `changed` を検出し、変更前後の値と変更フィールドを表示します。名前は `-` / `_` / `.` と大文字小文字を正規化して照合します。
+- バージョン、ライセンスの元表記、メタデータ取得元、判定ステータスを比較します。説明文の `reason` は比較しません。表記だけのライセンス変更もレビュー対象になります。
+- 差分モードのJSONは `{"packages": [...], "changes": [...]}` です。`packages` は現在の全検査結果、`changes` は差分です。通常のJSON一覧と、前回の差分JSONのどちらも基準にできます。追加は `before: null`、削除は `after: null` になります。
+- ターミナルとCSVは差分のみを表示します。HTMLは差分と現在の全一覧を表示します。削除だけの場合も差分に含みます。
+- 通常は変更を報告するだけです。`--fail-on-change` を追加すると、どの比較フィールドの変更・追加・削除でも終了コード1になります。レポートは失敗時も保存します。
+- 以前の検査結果を許可として流用せず、現在の全パッケージを現在のポリシーで再判定します。差分がなくても既存の禁止ライセンスは失敗します。
+- 壊れた基準ファイル、名前の重複、基準と出力への同じパス指定は終了コード2です。対象範囲やOS・Python・ポリシーの違いも差分になるため、比較条件を揃えてください。基準ファイルの自動更新は行いません。
+
 ## 判定の範囲
 
 `License-Expression` を優先し、次に古い `License`、ライセンス関連の `Classifier` を証拠として記録します。古い `License` は正規化後の許可・禁止リストとの完全一致でのみ判定し、自由文とClassifierは不明として扱います。ライセンス本文の同定、法的な互換性判定、NOTICEの作成は行いません。`allowed` は指定ポリシーに適合する意味です。

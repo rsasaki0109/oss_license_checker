@@ -12,6 +12,7 @@ from packaging.licenses import canonicalize_license_expression
 
 from .project import dependency_names, load_policy
 from .report import render_html
+from .baseline import compare, load_baseline, render_comparison
 
 
 def normalize(name):
@@ -156,6 +157,8 @@ def main(argv=None):
     parser.add_argument("packages", nargs="*", help="Installed package names (default: entire environment)")
     parser.add_argument("--format", choices=["table", "json", "csv", "html"], default="table")
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--baseline", type=Path, help="Compare with a previous JSON inventory")
+    parser.add_argument("--fail-on-change", action="store_true", help="Fail on any inventory change; requires --baseline")
     parser.add_argument("--recursive", action="store_true", help="Include installed transitive dependencies; supports root[extra]")
     parser.add_argument("--config", type=Path, help="Policy TOML or pyproject.toml (explicit opt-in)")
     parser.add_argument("--allow", action="append", default=None, help="Allowed SPDX identifier; repeatable; replaces config allow list")
@@ -163,6 +166,11 @@ def main(argv=None):
     parser.add_argument("--fail-unknown", action=argparse.BooleanOptionalAction, default=None)
     args = parser.parse_args(argv)
     try:
+        if args.fail_on_change and not args.baseline:
+            raise ValueError("--fail-on-change requires --baseline")
+        if args.baseline and args.output and args.baseline.resolve() == args.output.resolve():
+            raise ValueError("Baseline and output must be different files")
+        baseline = load_baseline(args.baseline) if args.baseline else None
         policy = load_policy(args.config) if args.config else {}
         allow = args.allow if args.allow is not None else policy.get("allow", [])
         deny = args.deny if args.deny is not None else policy.get("deny", [])
@@ -172,7 +180,14 @@ def main(argv=None):
         scope = None
         if args.packages:
             scope = ", ".join(args.packages) + (" (including transitive dependencies)" if args.recursive else " (selected packages only)")
-        output = render(rows, args.format, policy={"allow": allow, "deny": deny, "fail-unknown": fail_unknown}, scope=scope)
+        effective_policy = {"allow": allow, "deny": deny, "fail-unknown": fail_unknown}
+        if baseline is not None:
+            changes = compare(baseline, rows)
+            output = render_comparison(rows, changes, args.format, policy=effective_policy,
+                                       scope=scope, fail_on_change=args.fail_on_change)
+            failed = failed or (args.fail_on_change and bool(changes))
+        else:
+            output = render(rows, args.format, policy=effective_policy, scope=scope)
         if args.output:
             args.output.write_text(output, encoding="utf-8")
         else:

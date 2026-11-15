@@ -2,6 +2,7 @@
 
 from collections import Counter
 from html import escape
+import json
 
 
 STYLE = """
@@ -33,7 +34,7 @@ tbody tr:last-child td{border-bottom:0}.license{min-width:220px;max-width:420px;
 """
 
 
-def render_html(rows, policy=None, scope=None):
+def render_html(rows, policy=None, scope=None, *, changes=None, fail_on_change=False):
     policy = policy or {}
     allow, deny = policy.get("allow", []), policy.get("deny", [])
     fail_unknown = policy.get("fail-unknown", False)
@@ -56,6 +57,23 @@ def render_html(rows, policy=None, scope=None):
     if not rows:
         body = '<tr><td colspan="6">No installed packages matched this scan.</td></tr>'
     verdict = "Policy check failed" if failed else "Policy check passed"
+    comparison = ""
+    if changes is not None:
+        if fail_on_change and changes and not failed:
+            verdict = "Change check failed"
+        failed = failed or bool(fail_on_change and changes)
+        change_rows = "".join(
+            f'<tr><td>{esc(change["name"])}</td><td>{esc(change["change"])}</td>'
+            f'<td>{esc(", ".join(change["fields"]))}</td>'
+            f'<td class="license"><code>{esc(json.dumps(change["before"], ensure_ascii=False, indent=2))}</code></td>'
+            f'<td class="license"><code>{esc(json.dumps(change["after"], ensure_ascii=False, indent=2))}</code></td></tr>'
+            for change in changes
+        ) or '<tr><td colspan="5">No package changes.</td></tr>'
+        comparison = f'''<h2>Changes from baseline</h2><div class="table-wrap"><table>
+<caption>{len(changes)} package changes · {'Changes fail the check' if fail_on_change else 'Changes are informational'}.
+Current packages are always re-evaluated against the current policy.</caption>
+<thead><tr><th scope="col">Package</th><th scope="col">Change</th><th scope="col">Fields</th>
+<th scope="col">Before</th><th scope="col">After</th></tr></thead><tbody>{change_rows}</tbody></table></div>'''
     return f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -70,7 +88,7 @@ def render_html(rows, policy=None, scope=None):
 <dt>Allowed licenses</dt><dd><code>{esc(', '.join(allow) if allow else 'Unrestricted (no allow list)')}</code></dd>
 <dt>Denied licenses</dt><dd><code>{esc(', '.join(deny) if deny else 'None specified')}</code></dd>
 <dt>Unknown licenses</dt><dd>{'Fail the check' if fail_unknown else 'Report for review; do not fail the check'}</dd>
-</dl></section><h2>Package inventory</h2><div class="table-wrap"><table>
+</dl></section>{comparison}<h2>Package inventory</h2><div class="table-wrap"><table>
 <caption>{len(rows)} packages · Metadata evidence is preserved below.</caption>
 <thead><tr><th scope="col">Package</th><th scope="col">Version</th><th scope="col">License</th>
 <th scope="col">Metadata source</th><th scope="col">Status</th><th scope="col">Reason</th></tr></thead><tbody>{body}</tbody>
