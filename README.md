@@ -17,6 +17,7 @@ python -m pip install -e .
 oss-license-checker
 oss-license-checker requests --format json
 oss-license-checker --format csv --output licenses.csv
+oss-license-checker --format html --output licenses.html
 ```
 
 対象プロジェクトの仮想環境に依存パッケージと本ツールをインストールして実行してください。引数なしでは、その環境の全パッケージ（推移依存、開発用ツール、本ツール自身を含む）を検査します。名前だけ指定した場合は指定パッケージのみ検査します。
@@ -61,6 +62,19 @@ oss-license-checker --allow MIT --allow Apache-2.0 --allow BSD-3-Clause \
 - `--fail-unknown` は不明なライセンスもCIエラーにします。
 
 終了コード: `0` = 検査通過、`1` = ルール違反または不明（`--fail-unknown`時）、`2` = 未インストールのパッケージやファイル出力などの実行エラー。
+
+## 共有用HTMLレポート
+
+![HTMLレポートの表示例：集計、適用ポリシー、パッケージ一覧](docs/assets/report.png)
+
+```bash
+oss-license-checker your-package --recursive --config pyproject.toml \
+  --format html --output licenses.html
+```
+
+`licenses.html` をブラウザで開くと、検査の成否、許可・拒否・不明の件数、適用したポリシー、各パッケージのライセンスと取得元を確認できます。CSSを内蔵した単一ファイルで、JavaScriptや外部通信は不要です。画面幅に合わせて表示し、印刷にも対応しています。
+
+違反で終了コード1になった場合もレポートは出力します。CIでは出力ファイルをartifactとして保存すると、結果をチームで共有できます。ポリシー未指定、または `--fail-unknown` 未指定なら、不明ライセンスがあってもチェックは通る点に注意してください。本リポジトリのGitHub ActionsもHTMLレポートをartifactとして保存します。
 
 ## 判定の範囲
 

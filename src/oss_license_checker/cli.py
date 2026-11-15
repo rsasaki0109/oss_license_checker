@@ -10,6 +10,7 @@ from importlib import metadata
 from pathlib import Path
 
 from .project import dependency_names, load_policy
+from .report import render_html
 
 
 def normalize(name):
@@ -107,7 +108,9 @@ def collect(names=None, allow=(), deny=(), fail_unknown=False, recursive=False):
     return rows, failed
 
 
-def render(rows, format):
+def render(rows, format, *, policy=None, scope=None):
+    if format == "html":
+        return render_html(rows, policy, scope)
     if format == "json":
         return json.dumps(rows, ensure_ascii=False, indent=2) + "\n"
     if format == "csv":
@@ -124,7 +127,7 @@ def render(rows, format):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("packages", nargs="*", help="Installed package names (default: entire environment)")
-    parser.add_argument("--format", choices=["table", "json", "csv"], default="table")
+    parser.add_argument("--format", choices=["table", "json", "csv", "html"], default="table")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--recursive", action="store_true", help="Include installed transitive dependencies; supports root[extra]")
     parser.add_argument("--config", type=Path, help="Policy TOML or pyproject.toml (explicit opt-in)")
@@ -138,7 +141,10 @@ def main(argv=None):
         deny = args.deny if args.deny is not None else policy.get("deny", [])
         fail_unknown = args.fail_unknown if args.fail_unknown is not None else policy.get("fail-unknown", False)
         rows, failed = collect(args.packages, allow, deny, fail_unknown, args.recursive)
-        output = render(rows, args.format)
+        scope = None
+        if args.packages:
+            scope = ", ".join(args.packages) + (" (including transitive dependencies)" if args.recursive else " (selected packages only)")
+        output = render(rows, args.format, policy={"allow": allow, "deny": deny, "fail-unknown": fail_unknown}, scope=scope)
         if args.output:
             args.output.write_text(output, encoding="utf-8")
         else:
