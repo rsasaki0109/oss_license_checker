@@ -1,0 +1,27 @@
+name: distribution
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install build twine
+      - name: Build source distribution and wheel
+        run: python -m build
+      - run: python -m twine check dist/*
+      - name: Verify wheel outside the source checkout
+        shell: bash
+        run: |
+          python -m venv "$RUNNER_TEMP/wheel-test"
+          "$RUNNER_TEMP/wheel-test/bin/python" -m pip install dist/*.whl
+          cd "$RUNNER_TEMP"
+          "$RUNNER_TEMP/wheel-test/bin/python" -I -m oss_license_checker --version
+          "$RUNNER_TEMP/wheel-test/bin/oss-license-checker" packaging --fail-unknown --format json --output wheel-inventory.json
+          "$RUNNER_TEMP/wheel-test/bin/python" -I -c 'import json; r=json.load(open("wheel-inventory.json")); assert len(r)==1 and r[0]["status"]=="allowed"'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python-distributions
+          path: dist/*

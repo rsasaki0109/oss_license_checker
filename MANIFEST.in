@@ -1,0 +1,5 @@
+include action.yml
+recursive-include scripts *.py
+recursive-include tests *.py
+recursive-include docs/assets *.gif *.png
+recursive-include .github/workflows *.yml

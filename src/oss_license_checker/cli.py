@@ -166,6 +166,11 @@ def render(rows, format, *, policy=None, scope=None):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
+    try:
+        installed_version = metadata.version("oss-license-checker")
+    except metadata.PackageNotFoundError:
+        installed_version = "unknown (not installed)"
+    parser.add_argument("--version", action="version", version=f"oss-license-checker {installed_version}")
     parser.add_argument("packages", nargs="*", help="Installed package names (default: entire environment)")
     parser.add_argument("--format", choices=["table", "json", "csv", "html", "markdown"], default="table")
     parser.add_argument("--output", type=Path)

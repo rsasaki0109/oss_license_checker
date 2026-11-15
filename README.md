@@ -14,6 +14,7 @@ Python環境にインストールされたパッケージのライセンスを�
 
 ```bash
 python -m pip install -e .
+oss-license-checker --version
 oss-license-checker
 oss-license-checker requests --format json
 oss-license-checker --format csv --output licenses.csv
@@ -222,5 +223,17 @@ oss-license-checker your-package --recursive --config pyproject.toml \
 python -m pip install -e .
 python -m unittest discover -s tests -v
 ```
+
+`python -m oss_license_checker` でも同じCLIを実行できます。
+
+### 配布物のビルド
+
+```bash
+python -m pip install build twine
+python -m build
+python -m twine check dist/*
+```
+
+`dist/` にwheelとソース配布物を作成します。GitHub Actionsの `distribution` ワークフローでもビルドし、ソース配布物からwheelを生成したうえで、独立した仮想環境へインストールしてCLIを確認します。成果物は `python-distributions` artifactから取得できます。PyPIへの公開やリリース作成は自動では行いません。
 
 READMEのGIFは架空のパッケージメタデータに対する実際のCLI判定を使ったデモです。開発用にPillowをインストールし、`python scripts/render_hero.py` で再生成できます（DejaVuフォントが必要）。PillowはCLIの実行依存には含みません。
