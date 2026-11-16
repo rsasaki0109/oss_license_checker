@@ -28,6 +28,6 @@
 python scripts/check_onboarding.py --output /tmp/license-onboarding-results
 ```
 
-単体テストとRequests・HTTPX・Richの検証にもmacOSジョブを追加しています。結果は対象コミットのGitHub Actionsで確認してください。
+単体テストとRequests・HTTPX・Richの検証にもmacOSジョブを追加しています。[確認記録](RELEASE_CANDIDATE.md) の対象コミットで、macOS・Linuxの導入確認と各検証の成功を確認済みです。
 
 初めて使う人による確認は未実施です。[ユーザーテストの手順と記録テンプレート](USER_TEST.md) に沿って、所要時間と迷った箇所を記録してください。今回の作業ではリリース・タグ作成・PyPI公開は行っていません。
