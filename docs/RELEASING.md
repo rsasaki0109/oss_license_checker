@@ -2,7 +2,7 @@
 
 通常の修正・機能追加ではバージョンを変更しません。機能をまとめてリリースするタイミングで、対象バージョンと変更点を決めます。
 
-1. 対象コミットを決め、`tests`・`distribution`・`real projects` のGitHub Actionsが成功していることを確認する。
+1. 対象コミットを決め、`tests`・`distribution`・`real projects`・`onboarding` のGitHub Actionsが成功していることを確認する。macOSジョブも確認する。
 2. [実プロジェクト検証](VALIDATION.md) の結果、READMEの導入手順、既知の制限を確認する。
 3. リリースする場合に限り `pyproject.toml` のバージョンを更新し、変更点・互換性への影響をまとめる。既に公開済みのバージョンを再利用しない。
 4. クリーンなチェックアウトで以下を実行する。

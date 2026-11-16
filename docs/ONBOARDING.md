@@ -22,4 +22,12 @@
 
 ## 残る確認
 
-macOSでのコマンド実行と、ツールを初めて使う人がREADMEだけで導入できるかの確認は未実施です。初回リリース前に、所要時間と迷った箇所を記録してください。今回の作業ではリリース・タグ作成・PyPI公開は行っていません。
+`onboarding` ワークフローでLinux・macOSの導入手順を継続確認します。`scripts/check_onboarding.py` はREADMEの先頭のbashブロックをそのまま実行します。clone先のURLだけをプロセス内のGit設定でローカルのチェックアウトへ向け、PRでもmainではなく対象コミットを検査します。終了コード・生成HTML・cloneしたコミットの一致を確認し、ログと `summary.json` をartifactに保存します。実行には依存パッケージ取得のネットワークが必要です。
+
+```bash
+python scripts/check_onboarding.py --output /tmp/license-onboarding-results
+```
+
+単体テストとRequests・HTTPX・Richの検証にもmacOSジョブを追加しています。結果は対象コミットのGitHub Actionsで確認してください。
+
+初めて使う人による確認は未実施です。[ユーザーテストの手順と記録テンプレート](USER_TEST.md) に沿って、所要時間と迷った箇所を記録してください。今回の作業ではリリース・タグ作成・PyPI公開は行っていません。
