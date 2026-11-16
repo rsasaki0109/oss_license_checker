@@ -12,7 +12,7 @@ Python環境にインストールされたパッケージのライセンスを�
 
 ## 最初の検査まで
 
-Python 3.11以上のLinux・macOSでは、次の手順でRequestsとその依存を試せます。
+Python 3.11以上とGitを用意してください。Linux・macOSでは、次の手順でRequestsとその依存を試せます。`python` コマンドがない環境では、最初の `python -m venv` を `python3 -m venv` に置き換えます。インストール時はネットワーク接続が必要です。
 
 ```bash
 git clone https://github.com/rsasaki0109/oss_license_checker.git
@@ -25,17 +25,42 @@ oss-license-checker requests --recursive \
   --format html --output licenses.html
 ```
 
-`licenses.html` をブラウザで開いて結果を確認してください。検証用ポリシーは設定例なので、自分のプロジェクトでは必要なライセンス条件を確認して調整します。
+終了コード0で、今いるフォルダに `licenses.html` が生成されれば検査完了です。macOSでは `open licenses.html`、Linuxのデスクトップ環境では `xdg-open licenses.html` で開けます。画面上部の判定、Unknown件数、各パッケージの結果を確認してください。検証用ポリシーは設定例なので、自分のプロジェクトでは必要なライセンス条件を確認して調整します。
 
-[実プロジェクト3件の検証結果と再現手順](docs/VALIDATION.md) · [リリース手順](docs/RELEASING.md) · [MIT License](LICENSE)
+[実プロジェクト3件の検証結果と再現手順](docs/VALIDATION.md) · [導入手順の確認結果](docs/ONBOARDING.md) · [リリース手順](docs/RELEASING.md) · [MIT License](LICENSE)
 
-## インストールと実行
+## 自分のプロジェクトで使う
+
+検査したいプロジェクトのフォルダへ移動し、そのプロジェクト用の仮想環境を有効にします。本ツールは、実行したPython環境にインストール済みのパッケージを検査します。別の仮想環境や、フォルダ内のソースを自動で検査するものではありません。
+
+パッケージとしてインストールできるプロジェクトなら、次のように導入できます。PyPIには未公開なので、ここではGitから本ツールをインストールします。
 
 ```bash
-python -m pip install -e .
+# 自分のプロジェクトのフォルダで実行
+python -m pip install . 'git+https://github.com/rsasaki0109/oss_license_checker.git'
+```
+
+`pyproject.toml` の `[project].name` を次の `your-package` に置き換えます。フォルダ名やPythonのimport名と異なる場合があります。
+
+```bash
+oss-license-checker your-package --recursive --format html --output licenses.html
+```
+
+`requirements.txt` で管理し、自分のコードをパッケージとしてインストールしないアプリなら、環境全体を検査できます。
+
+```bash
+python -m pip install -r requirements.txt 'git+https://github.com/rsasaki0109/oss_license_checker.git'
+oss-license-checker --format html --output licenses.html
+```
+
+引数なしでは本ツールや開発用ツールも対象に含みます。ポリシーなしの最初の実行は一覧の確認用です。CIで違反・不明を検出するには、次の「ポリシーを保存」でルールを設定して `--config` を指定してください。本番で使うGitインストール先は、確認したコミットSHAに固定できます。
+
+## 出力とインストールの確認
+
+```bash
 oss-license-checker --version
 oss-license-checker
-oss-license-checker requests --format json
+oss-license-checker --format json
 oss-license-checker --format csv --output licenses.csv
 oss-license-checker --format html --output licenses.html
 ```
@@ -50,6 +75,8 @@ oss-license-checker 'httpx[http2]' --recursive --fail-unknown
 ```
 
 `--recursive` はルートパッケージと、その `Requires-Dist` を再帰的に検査します。現在のPython・OSに適用される環境マーカーと、明示したextrasを評価します。循環依存でも停止します。未インストールの依存、バージョン条件の不一致、不明なextrasは終了コード2で報告します。レジストリへの問い合わせや自動インストールは行いません。直接URLの依存は名前で照合し、インストール元URLの一致は検証しません。
+
+extrasの例を使う前には `python -m pip install 'httpx[http2]'` で対象の依存もインストールします。
 
 ## ポリシーを保存
 
@@ -100,7 +127,18 @@ oss-license-checker --allow MIT --allow Apache-2.0 --allow BSD-3-Clause \
 - 括弧と `WITH` に対応します。例外付きライセンスを許可するには `--allow 'Apache-2.0 WITH LLVM-exception'` のように全体を指定してください。基底ライセンスの禁止は例外付きにも適用します。
 - `--fail-unknown` は不明なライセンスもCIエラーにします。
 
-終了コード: `0` = 検査通過、`1` = ルール違反または不明（`--fail-unknown`時）、`2` = 未インストールのパッケージやファイル出力などの実行エラー。
+終了コード: `0` = 検査通過、`1` = ルール違反・不明（`--fail-unknown`時）・変更（`--fail-on-change`時）・証拠ファイル欠落（`--fail-missing-license-files`時）、`2` = 設定・未インストールのパッケージ・ファイル出力などの実行エラー。
+
+### 結果を見て次にすること
+
+| 結果・症状 | 確認・対応 |
+| --- | --- |
+| `denied` / 終了コード1 | ライセンスとポリシーを確認。必要な利用条件を満たせるか検討し、ルールを変更する場合は根拠を残します。 |
+| `unknown` | `reason` と配布物のLICENSE・NOTICEを確認。「確認済みライセンス」の設定でバージョン・根拠を記録できます。 |
+| `Package is not installed` / 終了コード2 | 仮想環境とパッケージ名を確認し、同じPythonの `python -m pip show your-package` で調べます。 |
+| 設定ファイルが見つからない | `--config` は現在のフォルダを基準に読みます。設定は自動検出しません。 |
+| CLIが見つからない | 対象の仮想環境を有効にするか、そのPythonで `python -m oss_license_checker --version` を試します。 |
+| 終了コード1なのにレポートがある | 失敗結果の確認用に保存する仕様です。終了コード2の場合は生成されないことがあります。 |
 
 ## 共有用HTMLレポート
 
@@ -113,7 +151,7 @@ oss-license-checker your-package --recursive --config pyproject.toml \
 
 `licenses.html` をブラウザで開くと、検査の成否、許可・拒否・不明の件数、適用したポリシー、各パッケージのライセンスと取得元を確認できます。CSSを内蔵した単一ファイルで、JavaScriptや外部通信は不要です。画面幅に合わせて表示し、印刷にも対応しています。
 
-違反で終了コード1になった場合もレポートは出力します。CIでは出力ファイルをartifactとして保存すると、結果をチームで共有できます。ポリシー未指定、または `--fail-unknown` 未指定なら、不明ライセンスがあってもチェックは通る点に注意してください。本リポジトリのGitHub ActionsもHTMLレポートをartifactとして保存します。
+違反で終了コード1になった場合もレポートは出力します。CIでは出力ファイルをartifactとして保存すると、結果をチームで共有できます。設定の `fail-unknown` がfalseでCLIからも有効にしていなければ、不明ライセンスがあってもチェックは通ります。本リポジトリのGitHub ActionsもHTMLレポートをartifactとして保存します。
 
 ## GitHub Actionとして使う
 
