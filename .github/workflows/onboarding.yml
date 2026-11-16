@@ -1,0 +1,20 @@
+name: onboarding
+on: [push, pull_request]
+jobs:
+  readme:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run README quickstart in a new clone and virtual environment
+        run: python scripts/check_onboarding.py --output onboarding-results
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: onboarding-${{ matrix.os }}
+          path: onboarding-results

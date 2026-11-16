@@ -2,14 +2,19 @@ name: tests
 on: [push, pull_request]
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest]
         python: ['3.11', '3.12', '3.13']
         packaging: ['latest']
         include:
           - python: '3.11'
             packaging: '24.2'
+            os: ubuntu-latest
+          - python: '3.12'
+            packaging: latest
+            os: macos-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -41,7 +46,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
-          name: license-report-python-${{ matrix.python }}-packaging-${{ matrix.packaging }}
+          name: license-report-${{ matrix.os }}-python-${{ matrix.python }}-packaging-${{ matrix.packaging }}
           path: |
             licenses.html
             licenses.zip

@@ -2,9 +2,10 @@ name: real projects
 on: [push, pull_request]
 jobs:
   validate:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, macos-latest]
         project: [requests, httpx, rich]
     steps:
       - uses: actions/checkout@v4
@@ -26,5 +27,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
-          name: validation-${{ matrix.project }}
+          name: validation-${{ matrix.os }}-${{ matrix.project }}
           path: validation-results
