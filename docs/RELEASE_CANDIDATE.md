@@ -1,6 +1,6 @@
 # 初回リリース候補の確認記録
 
-確認日: 2026-11-16（日本時間）。開発バージョンは `0.6.0` のままです。
+確認日: 2026-11-16（日本時間）。
 
 ## 検証対象
 
@@ -19,14 +19,14 @@ CIのartifact取得はダウンロード先のHTTP 403で失敗したため、CI
 
 - wheel・ソース配布物とも `twine check` が成功。
 - wheelの `License-Expression` は `MIT`。両配布物にLICENSEを同梱。
-- 新規仮想環境にwheelをインストールし、ソースツリー外で `python -I -m oss_license_checker --version` が `0.6.0` を返す。
+- 新規仮想環境にwheelをインストールし、ソースツリー外で `python -I -m oss_license_checker --version` が配布メタデータと一致することを確認。
 - 本ツール自身と推移依存に `--fail-unknown`・`--fail-missing-license-files` を指定して通過し、JSONとZIPを生成。
 
 以下はこの追加確認でローカルに作ったファイルのSHA-256です。CIのバイナリのハッシュや、再ビルド時に同じハッシュになることを示すものではありません。
 
 ```text
-7fa80d5d351dc8f64805301956e7cc7d048d9e47c0df80bac8c18c2b60261da7  oss_license_checker-0.6.0-py3-none-any.whl
-fb351d4c76216bf216246d6db0de036d12ac4a31369f6b12eef84ce51a3955ec  oss_license_checker-0.6.0.tar.gz
+7fa80d5d351dc8f64805301956e7cc7d048d9e47c0df80bac8c18c2b60261da7  wheel
+fb351d4c76216bf216246d6db0de036d12ac4a31369f6b12eef84ce51a3955ec  source distribution
 ```
 
 ## 公開前の残作業
