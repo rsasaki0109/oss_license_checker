@@ -18,6 +18,7 @@ from .overrides import validate_overrides
 from .bundle import create_bundle
 from .markdown import render_markdown
 from .output import validate_output_paths, write_report
+from .environment import installed_distributions
 
 
 def normalize(name):
@@ -113,7 +114,7 @@ def evaluate(expression, allow, deny):
 def collect(names=None, allow=(), deny=(), fail_unknown=False, recursive=False, overrides=None):
     allow, deny = normalize_rules(allow), normalize_rules(deny)
     overrides = validate_overrides(overrides if overrides is not None else {})
-    installed = {normalize(d.metadata["Name"]): d for d in metadata.distributions() if d.metadata["Name"]}
+    installed = installed_distributions(metadata.distributions())
     selected = dependency_names(installed, names) if recursive else sorted({normalize(n) for n in names} if names else installed)
     rows = []
     for name in selected:

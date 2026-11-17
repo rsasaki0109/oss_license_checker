@@ -11,6 +11,7 @@ import zipfile
 
 from packaging.utils import canonicalize_name
 from packaging.version import Version
+from .environment import installed_distributions
 
 
 EVIDENCE_NAME = re.compile(r"^(?:licen[cs]e|copying|notice|copyright)(?:[._-].*)?$", re.I)
@@ -25,7 +26,7 @@ def relative_path(value):
 
 
 def create_bundle(rows, target):
-    installed = {canonicalize_name(d.metadata["Name"]): d for d in metadata.distributions() if d.metadata["Name"]}
+    installed = installed_distributions(metadata.distributions())
     packages, contents = [], {}
     target = target.resolve()
     for row in rows:
