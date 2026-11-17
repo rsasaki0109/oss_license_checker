@@ -1,0 +1,35 @@
+{
+  "checker_commit": "8fe39c10a05270664429afe8a37cd42aaa55d700",
+  "calibrex_commit": "75bbb1528f967ace2439b69627529a5d65585531",
+  "policy_sha256": "4186d97112efa680dcc6f4916ad3fac54a9975ebba14cd6921f03c468e715f1f",
+  "package_count": 18,
+  "unknown_before": [
+    "lz4",
+    "mcap",
+    "scipy"
+  ],
+  "unknown_after": [
+    "scipy"
+  ],
+  "missing_installed_evidence": [
+    "mcap"
+  ],
+  "strict_exit_code": 1,
+  "manual_evidence_files": 11,
+  "supplemental_evidence_is_separate": true,
+  "restricted_policy_check": "lz4 remains denied when BSD-2-Clause is absent from allow list",
+  "reviewed": [
+    {
+      "name": "lz4",
+      "version": "4.4.5",
+      "effective_license": "BSD-3-Clause AND BSD-2-Clause",
+      "metadata_source": "Classifier"
+    },
+    {
+      "name": "mcap",
+      "version": "1.6.0",
+      "effective_license": "MIT",
+      "metadata_source": "Classifier"
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "date": "2026-11-17",
+  "calibrex_commit": "75bbb1528f967ace2439b69627529a5d65585531",
+  "checker_commit": "8fe39c10a05270664429afe8a37cd42aaa55d700",
+  "mcap": {
+    "version": "1.6.0",
+    "tag": "releases/python/mcap/v1.6.0",
+    "commit": "ceaf05f1c33a7b8bca567092865d52cf41639e2d",
+    "source_version_file": "python/mcap/mcap/__init__.py",
+    "reviewed_expression": "MIT",
+    "wheel_evidence_still_missing": true
+  },
+  "lz4": {
+    "version": "4.4.5",
+    "tag": "v4.4.5",
+    "commit": "59b2d8176072bdee50d38cc68ec65c33b928a980",
+    "reviewed_expression": "BSD-3-Clause AND BSD-2-Clause",
+    "scope": "wrapper LICENSE plus all nine lz4libs source/header license comments; not a binary/source reproducibility attestation"
+  },
+  "scipy": {
+    "version": "1.18.1",
+    "status": "manual-review-required",
+    "override_applied": false,
+    "installed_license_path": "scipy-1.18.1.dist-info/LICENSE.txt",
+    "sha256": "17e7db9ffa4913121fa2df484633a362456a482da736c99db4711a98473770ea",
+    "bundled_declarations": [
+      "BSD-3-Clause",
+      "BSD-3-Clause-Open-MPI",
+      "GPL-3.0-or-later WITH GCC-exception-3.1",
+      "LGPL-2.1-or-later"
+    ]
+  },
+  "files": [
+    {
+      "file": "lz4-wrapper-LICENSE.txt",
+      "sha256": "e2ac43d6eb80eb4e52141817c812437e0b981b1d7b2dc7cc86c7ef5524044c6f",
+      "source": "installed lz4-4.4.5.dist-info/licenses/LICENSE",
+      "kind": "complete license"
+    },
+    {
+      "file": "mcap-LICENSE.txt",
+      "sha256": "da11235665c17d4c1634072dae92b8ba1b38d6fdde2ccf19a6bbede33253f58d",
+      "source": "https://github.com/foxglove/mcap/blob/ceaf05f1c33a7b8bca567092865d52cf41639e2d/LICENSE",
+      "kind": "complete license"
+    },
+    {
+      "file": "lz4.c-license.txt",
+      "sha256": "5cb67d02bd1e097f35ba61c38b34fee2fa314571db86ec1aa8edee513e229aa4",
+      "source": "https://github.com/python-lz4/python-lz4/blob/59b2d8176072bdee50d38cc68ec65c33b928a980/lz4libs/lz4.c",
+      "source_utf8_sha256": "b6a85fd8f9be0fedb568abd1338719b23b999583ccda6f3404d5ae11e4ce7b8e",
+      "kind": "first license comment, unchanged; trailing newline added"
+    },
+    {
+      "file": "lz4.h-license.txt",
+      "sha256": "70d784042d9746b5a7a766fa7d097287dbfdf6f72d16397b69b36bf35182926a",
+      "source": "https://github.com/python-lz4/python-lz4/blob/59b2d8176072bdee50d38cc68ec65c33b928a980/lz4libs/lz4.h",
+      "source_utf8_sha256": "c1614ecf7ada7b0be1acb560d4239595f96fbb7aa6a79a7c40cb358753830be6",
+      "kind": "first license comment, unchanged; trailing newline added"
+    },
+    {
+      "file": "lz4frame.c-license.txt",
+      "sha256": "8ae4b60a3d9ca73db65a60a0d2f5aa1dc53cb94ecc7a09da1b2f70b10d3a387b",
+      "source": "https://github.com/python-lz4/python-lz4/blob/59b2d8176072bdee50d38cc68ec65c33b928a980/lz4libs/lz4frame.c",
+      "source_utf8_sha256": "80812286293760e032b254fb1c5bfd03ed099879dbecf1503286c0bb3c342574",
+      "kind": "first license comment, unchanged; trailing newline added"
+    },
+    {
+      "file": "lz4frame.h-license.txt",
+      "sha256": "e8e87962aa03a4ababd8a63b9218421a2fa92e7da7abb37fd5cb7f5c1914327d",
+      "source": "https://github.com/python-lz4/python-lz4/blob/59b2d8176072bdee50d38cc68ec65c33b928a980/lz4libs/lz4frame.h",
+      "source_utf8_sha256": "47501e4925d60c0f87c7bfc68c8b9e0e4d942eea786e35d2c5bfbf5e9deab561",
+      "kind": "first license comment, unchanged; trailing newline added"
+    },
+    {
+      "file": "lz4frame_static.h-license.txt",
+      "sha256": "741ec07012bb71998bc165f4fb9bd4e5f370d84d3dd1b4341c61e83073707cca",
+      "source": "https://github.com/python-lz4/python-lz4/blob/59b2d8176072bdee50d38cc68ec65c33b928a980/lz4libs/lz4frame_static.h",
+      "source_utf8_sha256": "31ab72a6e97e4fa0bedd4420d24a3f1f8024cbfa1d8ffad88c87cbb4e04f769d",
+      "kind": "first license comment, unchanged; trailing newline added"
+    },
+    {
+      "file": "lz4hc.c-license.txt",
+      "sha256": "b03b6a59f89308a8236a36f12da7e311d87f52b99d66a1fdc47fc27ccaa1693c",
+      "source": "https://github.com/python-lz4/python-lz4/blob/59b2d8176072bdee50d38cc68ec65c33b928a980/lz4libs/lz4hc.c",
+      "source_utf8_sha256": "bca2cf3a014b21919da4fa92db5adbfbfc9aee2f0938107885a3a8f49a750aa8",
+      "kind": "first license comment, unchanged; trailing newline added"
+    },
+    {
+      "file": "lz4hc.h-license.txt",
+      "sha256": "53e96f438ba3098420a58d1a77ed356c94f8643806a35b9ef03d3341b01650a3",
+      "source": "https://github.com/python-lz4/python-lz4/blob/59b2d8176072bdee50d38cc68ec65c33b928a980/lz4libs/lz4hc.h",
+      "source_utf8_sha256": "6bc1efeb79571807da2ca084809de1760e0cd87064e40eccf9624d95088dce7d",
+      "kind": "first license comment, unchanged; trailing newline added"
+    },
+    {
+      "file": "xxhash.c-license.txt",
+      "sha256": "df5443d0097b2fa47b0e6f2f0b3f42271b40705f5a6f2d14bf3d1c7bcb325c9b",
+      "source": "https://github.com/python-lz4/python-lz4/blob/59b2d8176072bdee50d38cc68ec65c33b928a980/lz4libs/xxhash.c",
+      "source_utf8_sha256": "7ae8273e2eae674db237c4d0c300e4a69bff8832b0e5b4e08552255fde006fa2",
+      "kind": "first license comment, unchanged; trailing newline added"
+    },
+    {
+      "file": "xxhash.h-license.txt",
+      "sha256": "07ab483e553e0d2e5e03480127bce6d80db2d94a8411171785c875affc5cdfa9",
+      "source": "https://github.com/python-lz4/python-lz4/blob/59b2d8176072bdee50d38cc68ec65c33b928a980/lz4libs/xxhash.h",
+      "source_utf8_sha256": "aefdd236f35130495c18764cabed3f7b216906855fc5e6a9025cd2040bc84444",
+      "kind": "first license comment, unchanged; trailing newline added"
+    }
+  ]
+}

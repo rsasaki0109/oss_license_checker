@@ -1,0 +1,12 @@
+# Reviewed metadata corrections; not a production allow list.
+fail-unknown = true
+
+[overrides.lz4]
+license = "BSD-3-Clause AND BSD-2-Clause"
+version = "4.4.5"
+reason = "Wrapper LICENSE matches upstream v4.4.5 (SHA-256 e2ac43d6eb80eb4e52141817c812437e0b981b1d7b2dc7cc86c7ef5524044c6f); all nine bundled lz4libs source/header license comments are BSD-2-Clause. See review-evidence/provenance.json."
+
+[overrides.mcap]
+license = "MIT"
+version = "1.6.0"
+reason = "Reviewed upstream LICENSE at commit ceaf05f1c33a7b8bca567092865d52cf41639e2d; release tag and python/mcap/mcap/__init__.py confirm 1.6.0. See review-evidence/provenance.json. Installed wheel evidence remains missing."

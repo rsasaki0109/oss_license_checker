@@ -1,5 +1,7 @@
 # 自作OSSでの検証：Calibrex
 
+検出後の本文確認と版限定補正については、[ライセンス確認の続き](CALIBREX_LICENSE_REVIEW.md) を参照してください。以下は補正前の観測をそのまま残しています。
+
 2026-11-17（日本時間）、Linux / Python 3.12で実施。対象は [Calibrex](https://github.com/rsasaki0109/Calibrex) の [`75bbb1528f967ace2439b69627529a5d65585531`](https://github.com/rsasaki0109/Calibrex/commit/75bbb1528f967ace2439b69627529a5d65585531)、検査ツールは [`8fe39c1`](https://github.com/rsasaki0109/oss_license_checker/commit/8fe39c1) です。Calibrex側のコードや設定は変更していません。
 
 ## 結果

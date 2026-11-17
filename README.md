@@ -12,6 +12,8 @@
 
 [自作OSSのCalibrexでの検証結果](docs/CALIBREX_VALIDATION.md)：コア依存とextrasを検査し、不明なライセンスと証拠ファイルの欠落を確認しました。
 
+[検出後の本文確認と補正例](docs/CALIBREX_LICENSE_REVIEW.md)：lz4・mcapの根拠を記録し、SciPyの同梱ライブラリと残る配布上の確認事項を整理しています。
+
 Python環境にインストールされたパッケージのライセンスを一覧化し、CIで許可・禁止ルールを検査するCLIです。Python 3.11以上。パッケージのコードは実行せず、ローカルの配布メタデータを読み取ります。依存指定の解析には `packaging` を使用します。
 
 ## 最初の検査まで
