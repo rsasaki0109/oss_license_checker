@@ -1,0 +1,287 @@
+{
+  "core": {
+    "target": "calibrex",
+    "exit_code": 1,
+    "package_count": 14,
+    "evidence_file_count": 38,
+    "unknown": [
+      "scipy"
+    ],
+    "missing_evidence": [],
+    "packages": [
+      {
+        "name": "annotated-types",
+        "version": "0.8.0",
+        "status": "allowed",
+        "source": "License-Expression",
+        "license_metadata_sha256": "e5dcffe836b6ec8a58e492419b550e65fb8cbdc308503979e5dacb33ac7ea3b7"
+      },
+      {
+        "name": "attrs",
+        "version": "26.1.0",
+        "status": "allowed",
+        "source": "License-Expression",
+        "license_metadata_sha256": "e5dcffe836b6ec8a58e492419b550e65fb8cbdc308503979e5dacb33ac7ea3b7"
+      },
+      {
+        "name": "calibrex",
+        "version": "0.6.4",
+        "status": "allowed",
+        "source": "License-Expression",
+        "license_metadata_sha256": "2af71558e438db0b73a20beab92dc278a94e1bbe974c00c1a33e3ab62d53a608"
+      },
+      {
+        "name": "jsonschema",
+        "version": "4.26.0",
+        "status": "allowed",
+        "source": "License-Expression",
+        "license_metadata_sha256": "e5dcffe836b6ec8a58e492419b550e65fb8cbdc308503979e5dacb33ac7ea3b7"
+      },
+      {
+        "name": "jsonschema-specifications",
+        "version": "2025.9.1",
+        "status": "allowed",
+        "source": "License-Expression",
+        "license_metadata_sha256": "e5dcffe836b6ec8a58e492419b550e65fb8cbdc308503979e5dacb33ac7ea3b7"
+      },
+      {
+        "name": "numpy",
+        "version": "2.5.5",
+        "status": "allowed",
+        "source": "License-Expression",
+        "license_metadata_sha256": "365ecdf0eeda8f7d03d67a4bbb06119df487ff240e108dde6f85bdf76c908781"
+      },
+      {
+        "name": "pydantic",
+        "version": "2.14.3",
+        "status": "allowed",
+        "source": "License-Expression",
+        "license_metadata_sha256": "e5dcffe836b6ec8a58e492419b550e65fb8cbdc308503979e5dacb33ac7ea3b7"
+      },
+      {
+        "name": "pydantic_core",
+        "version": "2.50.4",
+        "status": "allowed",
+        "source": "License-Expression",
+        "license_metadata_sha256": "e5dcffe836b6ec8a58e492419b550e65fb8cbdc308503979e5dacb33ac7ea3b7"
+      },
+      {
+        "name": "PyYAML",
+        "version": "6.0.3",
+        "status": "allowed",
+        "source": "License",
+        "license_metadata_sha256": "e5dcffe836b6ec8a58e492419b550e65fb8cbdc308503979e5dacb33ac7ea3b7"
+      },
+      {
+        "name": "referencing",
+        "version": "0.37.0",
+        "status": "allowed",
+        "source": "License-Expression",
+        "license_metadata_sha256": "e5dcffe836b6ec8a58e492419b550e65fb8cbdc308503979e5dacb33ac7ea3b7"
+      },
+      {
+        "name": "rpds-py",
+        "version": "2026.9.1",
+        "status": "allowed",
+        "source": "License-Expression",
+        "license_metadata_sha256": "e5dcffe836b6ec8a58e492419b550e65fb8cbdc308503979e5dacb33ac7ea3b7"
+      },
+      {
+        "name": "scipy",
+        "version": "1.18.1",
+        "status": "unknown",
+        "source": "License",
+        "license_metadata_sha256": "4b7ff610496c1dced4b40b03ec3f1b52e029c2b55cf6f4e8bb1e4b5227421912"
+      },
+      {
+        "name": "typing_extensions",
+        "version": "4.16.0",
+        "status": "allowed",
+        "source": "License-Expression",
+        "license_metadata_sha256": "606b04e71db9ca7a05d4fcb08cc69001946922a9b909de4932413ea640da9486"
+      },
+      {
+        "name": "typing-inspection",
+        "version": "0.4.5",
+        "status": "allowed",
+        "source": "License-Expression",
+        "license_metadata_sha256": "e5dcffe836b6ec8a58e492419b550e65fb8cbdc308503979e5dacb33ac7ea3b7"
+      }
+    ]
+  },
+  "extras": {
+    "target": "calibrex[images,mcap]",
+    "exit_code": 1,
+    "package_count": 18,
+    "evidence_file_count": 41,
+    "unknown": [
+      "lz4",
+      "mcap",
+      "scipy"
+    ],
+    "missing_evidence": [
+      "mcap"
+    ],
+    "packages": [
+      {
+        "name": "annotated-types",
+        "version": "0.8.0",
+        "status": "allowed",
+        "source": "License-Expression",
+        "license_metadata_sha256": "e5dcffe836b6ec8a58e492419b550e65fb8cbdc308503979e5dacb33ac7ea3b7"
+      },
+      {
+        "name": "attrs",
+        "version": "26.1.0",
+        "status": "allowed",
+        "source": "License-Expression",
+        "license_metadata_sha256": "e5dcffe836b6ec8a58e492419b550e65fb8cbdc308503979e5dacb33ac7ea3b7"
+      },
+      {
+        "name": "calibrex",
+        "version": "0.6.4",
+        "status": "allowed",
+        "source": "License-Expression",
+        "license_metadata_sha256": "2af71558e438db0b73a20beab92dc278a94e1bbe974c00c1a33e3ab62d53a608"
+      },
+      {
+        "name": "jsonschema",
+        "version": "4.26.0",
+        "status": "allowed",
+        "source": "License-Expression",
+        "license_metadata_sha256": "e5dcffe836b6ec8a58e492419b550e65fb8cbdc308503979e5dacb33ac7ea3b7"
+      },
+      {
+        "name": "jsonschema-specifications",
+        "version": "2025.9.1",
+        "status": "allowed",
+        "source": "License-Expression",
+        "license_metadata_sha256": "e5dcffe836b6ec8a58e492419b550e65fb8cbdc308503979e5dacb33ac7ea3b7"
+      },
+      {
+        "name": "lz4",
+        "version": "4.4.5",
+        "status": "unknown",
+        "source": "Classifier",
+        "license_metadata_sha256": "a9d12a80ef01f6c56c47128aaa0ce1518ca8c9925333ee56da07691788a2fe26"
+      },
+      {
+        "name": "mcap",
+        "version": "1.6.0",
+        "status": "unknown",
+        "source": "Classifier",
+        "license_metadata_sha256": "012477eb0ae60687750030b5b3d1206dd5a17244ffe5ed5300044feaf6ae62ad"
+      },
+      {
+        "name": "numpy",
+        "version": "2.5.5",
+        "status": "allowed",
+        "source": "License-Expression",
+        "license_metadata_sha256": "365ecdf0eeda8f7d03d67a4bbb06119df487ff240e108dde6f85bdf76c908781"
+      },
+      {
+        "name": "pillow",
+        "version": "13.0.0",
+        "status": "allowed",
+        "source": "License-Expression",
+        "license_metadata_sha256": "3855f83eee504691f6f2d0eb2097e49d2568479d4fa3e2b9160a013d2b9eb2a5"
+      },
+      {
+        "name": "pydantic",
+        "version": "2.14.3",
+        "status": "allowed",
+        "source": "License-Expression",
+        "license_metadata_sha256": "e5dcffe836b6ec8a58e492419b550e65fb8cbdc308503979e5dacb33ac7ea3b7"
+      },
+      {
+        "name": "pydantic_core",
+        "version": "2.50.4",
+        "status": "allowed",
+        "source": "License-Expression",
+        "license_metadata_sha256": "e5dcffe836b6ec8a58e492419b550e65fb8cbdc308503979e5dacb33ac7ea3b7"
+      },
+      {
+        "name": "PyYAML",
+        "version": "6.0.3",
+        "status": "allowed",
+        "source": "License",
+        "license_metadata_sha256": "e5dcffe836b6ec8a58e492419b550e65fb8cbdc308503979e5dacb33ac7ea3b7"
+      },
+      {
+        "name": "referencing",
+        "version": "0.37.0",
+        "status": "allowed",
+        "source": "License-Expression",
+        "license_metadata_sha256": "e5dcffe836b6ec8a58e492419b550e65fb8cbdc308503979e5dacb33ac7ea3b7"
+      },
+      {
+        "name": "rpds-py",
+        "version": "2026.9.1",
+        "status": "allowed",
+        "source": "License-Expression",
+        "license_metadata_sha256": "e5dcffe836b6ec8a58e492419b550e65fb8cbdc308503979e5dacb33ac7ea3b7"
+      },
+      {
+        "name": "scipy",
+        "version": "1.18.1",
+        "status": "unknown",
+        "source": "License",
+        "license_metadata_sha256": "4b7ff610496c1dced4b40b03ec3f1b52e029c2b55cf6f4e8bb1e4b5227421912"
+      },
+      {
+        "name": "typing_extensions",
+        "version": "4.16.0",
+        "status": "allowed",
+        "source": "License-Expression",
+        "license_metadata_sha256": "606b04e71db9ca7a05d4fcb08cc69001946922a9b909de4932413ea640da9486"
+      },
+      {
+        "name": "typing-inspection",
+        "version": "0.4.5",
+        "status": "allowed",
+        "source": "License-Expression",
+        "license_metadata_sha256": "e5dcffe836b6ec8a58e492419b550e65fb8cbdc308503979e5dacb33ac7ea3b7"
+      },
+      {
+        "name": "zstandard",
+        "version": "0.25.0",
+        "status": "allowed",
+        "source": "License-Expression",
+        "license_metadata_sha256": "118dbcd2d5c9f9b296a9ede9fcc469c5840f7b98ad2c88461055bf2ceda38037"
+      }
+    ]
+  },
+  "changes": [
+    {
+      "name": "lz4",
+      "change": "added"
+    },
+    {
+      "name": "mcap",
+      "change": "added"
+    },
+    {
+      "name": "pillow",
+      "change": "added"
+    },
+    {
+      "name": "zstandard",
+      "change": "added"
+    }
+  ],
+  "provenance": {
+    "repository": "https://github.com/rsasaki0109/Calibrex",
+    "commit": "75bbb1528f967ace2439b69627529a5d65585531",
+    "checker_commit": "8fe39c10a05270664429afe8a37cd42aaa55d700",
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+    "python": "3.12.14",
+    "scan_flags": [
+      "--recursive",
+      "--fail-unknown",
+      "--fail-missing-license-files"
+    ],
+    "policy": "No allow/deny list; SPDX validation only, not a license acceptance decision",
+    "hashes_verified": true,
+    "diff_checks": "Unchanged exits 0; four added extras exit 1 with --no-fail-unknown to isolate change detection"
+  }
+}
