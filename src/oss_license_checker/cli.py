@@ -17,6 +17,7 @@ from .baseline import compare, load_baseline, render_comparison
 from .overrides import validate_overrides
 from .bundle import create_bundle
 from .markdown import render_markdown
+from .output import validate_output_paths, write_report
 
 
 def normalize(name):
@@ -185,13 +186,9 @@ def main(argv=None):
     try:
         if args.fail_missing_license_files and not args.license_bundle:
             raise ValueError("--fail-missing-license-files requires --license-bundle")
-        if args.license_bundle and any(path and path.resolve() == args.license_bundle.resolve()
-                                       for path in (args.output, args.baseline, args.config)):
-            raise ValueError("License bundle must differ from report, baseline and config paths")
+        validate_output_paths(args.output, args.license_bundle, args.config, args.baseline)
         if args.fail_on_change and not args.baseline:
             raise ValueError("--fail-on-change requires --baseline")
-        if args.baseline and args.output and args.baseline.resolve() == args.output.resolve():
-            raise ValueError("Baseline and output must be different files")
         baseline = load_baseline(args.baseline) if args.baseline else None
         policy = load_policy(args.config) if args.config else {}
         allow = args.allow if args.allow is not None else policy.get("allow", [])
@@ -214,7 +211,7 @@ def main(argv=None):
         if missing_evidence:
             print("License evidence is missing for some packages; see manifest.json in the license bundle", file=sys.stderr)
         if args.output:
-            args.output.write_text(output, encoding="utf-8")
+            write_report(args.output, output)
         else:
             sys.stdout.write(output)
         return 1 if failed or (args.fail_missing_license_files and missing_evidence) else 0
