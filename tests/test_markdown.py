@@ -55,7 +55,7 @@ class MarkdownTests(unittest.TestCase):
         self.assertIn('No installed packages', render([], 'markdown'))
         text = render_comparison([row()], [], 'markdown', policy={}, scope=None, fail_on_change=True)
         self.assertIn('No package changes.', text)
-        self.assertIn('Policy check passed', text)
+        self.assertIn('Inventory collected (no allow/deny policy)', text)
 
     @patch('oss_license_checker.cli.metadata.distributions')
     def test_cli_writes_markdown_despite_policy_failure(self, distributions):

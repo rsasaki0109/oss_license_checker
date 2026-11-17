@@ -134,14 +134,18 @@ def collect(names=None, allow=(), deny=(), fail_unknown=False, recursive=False, 
                 if effective_license.upper() in {"UNKNOWN", "UNLICENSED", "NONE", "NOASSERTION"}:
                     raise ValueError("unknown license")
                 status = "allowed" if evaluate(effective_license, set(allow), set(deny)) else "denied"
-                reason = "A license alternative is permitted" if status == "allowed" else "No license alternative is permitted by the policy"
+                if status == "allowed":
+                    reason = "A license alternative is permitted" if allow or deny else "SPDX expression recognized; no allow/deny policy evaluated"
+                else:
+                    reason = "No license alternative is permitted by the policy"
             except ValueError as exc:
                 reason = str(exc)
         elif source == "Classifier":
             reason = "Classifier labels require manual review"
         rows.append({"name": dist.metadata["Name"], "version": dist.version,
                      "license": license_value, "source": source, "status": status, "reason": reason,
-                     "effective_license": effective_license, "override_reason": override["reason"] if override else ""})
+                     "effective_license": effective_license, "override_reason": override["reason"] if override else "",
+                     "assessment": "policy-evaluated" if allow or deny else "inventory-only"})
     failed = any(r["status"] == "denied" or (fail_unknown and r["status"] == "unknown") for r in rows)
     return rows, failed
 
@@ -155,13 +159,13 @@ def render(rows, format, *, policy=None, scope=None):
         return json.dumps(rows, ensure_ascii=False, indent=2) + "\n"
     if format == "csv":
         stream = io.StringIO(newline="")
-        writer = csv.DictWriter(stream, fieldnames=["name", "version", "license", "source", "status", "reason", "effective_license", "override_reason"])
+        writer = csv.DictWriter(stream, fieldnames=["name", "version", "license", "source", "status", "reason", "effective_license", "override_reason", "assessment"])
         writer.writeheader()
         writer.writerows(rows)
         return stream.getvalue()
-    return "\n".join(["NAME\tVERSION\tLICENSE\tSTATUS\tREASON\tEFFECTIVE_LICENSE\tOVERRIDE_REASON"] + [
+    return "\n".join(["NAME\tVERSION\tLICENSE\tSTATUS\tREASON\tEFFECTIVE_LICENSE\tOVERRIDE_REASON\tASSESSMENT"] + [
         "\t".join(str(r.get(k, "")).replace("\n", " ").replace("\r", " ").replace("\t", " ")
-                  for k in ("name", "version", "license", "status", "reason", "effective_license", "override_reason")) for r in rows]) + "\n"
+                  for k in ("name", "version", "license", "status", "reason", "effective_license", "override_reason", "assessment")) for r in rows]) + "\n"
 
 
 def main(argv=None):

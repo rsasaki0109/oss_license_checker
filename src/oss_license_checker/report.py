@@ -38,12 +38,14 @@ def render_html(rows, policy=None, scope=None, *, changes=None, fail_on_change=F
     policy = policy or {}
     allow, deny = policy.get("allow", []), policy.get("deny", [])
     fail_unknown = policy.get("fail-unknown", False)
+    has_rules = bool(allow or deny)
+    assessment = "policy-evaluated" if has_rules else "inventory-only"
     counts = Counter(row["status"] for row in rows)
     failed = bool(counts["denied"] or (fail_unknown and counts["unknown"]))
     esc = lambda value: escape(str(value), quote=True)
     cards = "".join(
         f'<div class="card"><strong>{count}</strong><span>{label}</span></div>'
-        for count, label in [(len(rows), "Packages inspected"), (counts["allowed"], "Allowed"),
+        for count, label in [(len(rows), "Packages inspected"), (counts["allowed"], "Allowed" if has_rules else "SPDX recognized"),
                              (counts["denied"], "Denied"), (counts["unknown"], "Unknown")]
     )
     body = "".join(
@@ -51,7 +53,7 @@ def render_html(rows, policy=None, scope=None, *, changes=None, fail_on_change=F
         + f'<td class="license"><code>{esc(row["license"])}</code></td>'
         + f'<td class="license"><code>{esc(row.get("effective_license", row["license"]))}</code></td>'
         + f'<td class="muted">{esc(row["source"])}</td>'
-        + f'<td><span class="badge {row["status"] if row["status"] in {"allowed", "denied", "unknown"} else "unknown"}">{esc(row["status"])}</span></td>'
+        + f'<td><span class="badge {row["status"] if row["status"] in {"allowed", "denied", "unknown"} else "unknown"}">{esc("recognized" if row["status"] == "allowed" and not has_rules else row["status"])}</span></td>'
         + f'<td>{esc(row.get("reason", ""))}'
         + (f'<p><strong>Reviewed override:</strong> {esc(row["override_reason"])}</p>' if row.get("override_reason") else '') + '</td></tr>'
         for row in rows
@@ -59,6 +61,8 @@ def render_html(rows, policy=None, scope=None, *, changes=None, fail_on_change=F
     if not rows:
         body = '<tr><td colspan="7">No installed packages matched this scan.</td></tr>'
     verdict = "Policy check failed" if failed else "Policy check passed"
+    if not has_rules and not failed:
+        verdict = "Inventory collected (no allow/deny policy)"
     comparison = ""
     if changes is not None:
         if fail_on_change and changes and not failed:
@@ -84,7 +88,9 @@ Current packages are always re-evaluated against the current policy.</caption>
 <body><main><header><div class="eyebrow">OSS License Checker / dependency inventory</div>
 <h1>Know what ships.</h1><p>License evidence and policy results for your Python dependencies.</p>
 <p>Scope: {esc(scope or 'Entire installed environment')}</p>
-<div class="verdict{' failed' if failed else ''}">{verdict}</div></header>
+<div class="verdict{' failed' if failed else ''}">{verdict}</div>
+<p>Assessment: {assessment}. Distribution readiness: not assessed.</p>
+<p>Coverage: installed Python distribution metadata. Copied source, OS/ROS dependencies and bundled native components require separate review.</p></header>
 <section aria-label="Summary" class="cards">{cards}</section>
 <h2>Policy applied</h2><section class="panel" aria-label="Effective policy"><dl class="policy">
 <dt>Allowed licenses</dt><dd><code>{esc(', '.join(allow) if allow else 'Unrestricted (no allow list)')}</code></dd>

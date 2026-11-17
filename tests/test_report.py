@@ -40,7 +40,7 @@ class ReportTests(unittest.TestCase):
         self.assertIn('Fail the check', text)
 
     def test_unknown_verdict_matches_exit_policy(self):
-        self.assertIn('Policy check passed', render([row('unknown')], 'html'))
+        self.assertIn('Inventory collected (no allow/deny policy)', render([row('unknown')], 'html'))
         self.assertIn('Policy check failed', render([row('unknown')], 'html', policy={'fail-unknown': True}))
         self.assertIn('Policy check failed', render([row('denied')], 'html'))
 
@@ -59,7 +59,7 @@ class ReportTests(unittest.TestCase):
     def test_empty_report(self):
         text = render([], 'html')
         self.assertIn('No installed packages matched this scan.', text)
-        self.assertIn('Policy check passed', text)
+        self.assertIn('Inventory collected (no allow/deny policy)', text)
 
     @patch('oss_license_checker.cli.metadata.distributions')
     def test_cli_writes_html_even_on_violation_and_uses_effective_config(self, distributions):

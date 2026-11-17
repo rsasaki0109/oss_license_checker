@@ -19,14 +19,20 @@ def table(headers, rows):
 
 def render_markdown(rows, policy=None, scope=None, *, changes=None, fail_on_change=False):
     policy = policy or {}
+    has_rules = bool(policy.get('allow') or policy.get('deny'))
+    assessment = 'policy-evaluated' if has_rules else 'inventory-only'
     counts = Counter(row['status'] for row in rows)
     failed = bool(counts['denied'] or (policy.get('fail-unknown') and counts['unknown']))
     verdict = 'Policy check failed' if failed else 'Policy check passed'
+    if not has_rules and not failed:
+        verdict = 'Inventory collected (no allow/deny policy)'
     if not failed and fail_on_change and changes:
         verdict = 'Change check failed'
     parts = ['# OSS License Checker', f'**{verdict}**',
              'Scope: ' + literal(scope or 'Entire installed environment'),
-             table(['Packages', 'Allowed', 'Denied', 'Unknown'],
+             'Assessment: ' + literal(assessment) + '. **Distribution readiness: not assessed.**',
+             'Coverage: installed Python distribution metadata. Copied source, OS/ROS dependencies and bundled native components require separate review.',
+             table(['Packages', 'Allowed' if has_rules else 'SPDX recognized', 'Denied', 'Unknown'],
                    [[len(rows), counts['allowed'], counts['denied'], counts['unknown']]]),
              '## Policy applied',
              table(['Setting', 'Value'], [
@@ -43,7 +49,7 @@ def render_markdown(rows, policy=None, scope=None, *, changes=None, fail_on_chan
     parts += ['## Package inventory', table(
         ['Package', 'Version', 'Metadata license', 'Effective license', 'Source', 'Status', 'Reason', 'Review evidence'],
         [[row['name'], row['version'], row['license'], row.get('effective_license', row['license']),
-          row['source'], row['status'], row.get('reason', ''), row.get('override_reason', '')] for row in rows]
+          row['source'], 'recognized' if row['status'] == 'allowed' and not has_rules else row['status'], row.get('reason', ''), row.get('override_reason', '')] for row in rows]
     ) if rows else 'No installed packages matched this scan.',
         'Allowed means compliance with the policy above, not a legal compatibility assessment. '
         'Current packages are re-evaluated against the current policy; unknown metadata requires review.']
