@@ -53,6 +53,16 @@ python scripts/validate_distribution_review.py source-review.json
 
 ドラフトを別ファイルに保存し、各候補の出典・適用条件・対応内容・実配布物を確認して記録を更新します。再検査は新しいJSONへ出力し、人が更新したレビュー記録を自動で上書きしない運用にします。Python依存検査の基準JSON・ポリシー・ZIP収集とは混在させません。
 
+基準の `review_draft` から作ったレビュー記録は、次の検査で参照できます。記録内の配布IDと `source-tree` の参照先は、元の基準コミットとツリーの値を保持してください。
+
+```bash
+oss-license-checker --source-tree /path/to/repository \
+  --baseline source-baseline.json --prior-source-review source-review.json \
+  --format html --output source-follow-up.html
+```
+
+前回の未完了項目は `open`、完了・対象外だった項目はツリーに変更があれば `recheck`、同じツリーなら `historical` と表示します。候補に直接関係するパスが変わった項目には印を付けます。ツリーが変わった場合は、候補のパスに差分がなくても、配布物全体に結びつく完了記録を再確認します。JSONの `prior_review` には前回の項目IDと状態が入ります。新しい `review_draft` は今回の確認用で、元の記録はそのまま参照できます。終了コードは従来どおり検査の成否と `--fail-on-change` で決まります。
+
 ## Calibrexでの受け入れ確認
 
 コミット `75bbb1528f967ace2439b69627529a5d65585531` で、28,434エントリ・確認候補10件・範囲確認を含む11件の未確認記録を確認しました。

@@ -20,6 +20,7 @@ from .markdown import render_markdown
 from .output import validate_output_paths, write_report
 from .environment import installed_distributions
 from .source import scan_source, render_source, load_source_baseline, source_changes
+from .source_review import compare_review
 
 
 def normalize(name):
@@ -181,6 +182,7 @@ def main(argv=None):
     parser.add_argument("--output", type=Path)
     parser.add_argument("--source-tree", type=Path, help="Inventory a Git repository's committed source tree for publication review")
     parser.add_argument("--source-ref", help="Commit or ref to inspect with --source-tree (default: HEAD)")
+    parser.add_argument("--prior-source-review", type=Path, help="Compare a saved source review record with a verified --baseline")
     parser.add_argument("--license-bundle", type=Path, help="Collect installed LICENSE/NOTICE evidence and manifest into a ZIP")
     parser.add_argument("--fail-missing-license-files", action="store_true", help="Fail on missing evidence; requires --license-bundle")
     parser.add_argument("--baseline", type=Path, help="Compare with a previous JSON inventory")
@@ -192,6 +194,8 @@ def main(argv=None):
     parser.add_argument("--fail-unknown", action=argparse.BooleanOptionalAction, default=None)
     args = parser.parse_args(argv)
     try:
+        if args.prior_source_review and not (args.source_tree and args.baseline):
+            raise ValueError('--prior-source-review requires --source-tree and --baseline')
         if args.source_ref is not None and not args.source_tree:
             raise ValueError('--source-ref requires --source-tree')
         if args.source_tree:
@@ -202,11 +206,14 @@ def main(argv=None):
             if args.fail_on_change and not args.baseline:
                 raise ValueError('--fail-on-change requires --baseline')
             validate_output_paths(report=args.output, baseline=args.baseline)
+            validate_output_paths(report=args.output, config=args.prior_source_review)
             baseline = load_source_baseline(args.baseline, args.source_tree) if args.baseline else None
             inventory = scan_source(args.source_tree, args.source_ref or 'HEAD')
             if baseline is not None:
                 inventory['baseline_commit'] = baseline['commit']
                 inventory['changes'] = source_changes(baseline, inventory)
+                if args.prior_source_review:
+                    inventory['prior_review'] = compare_review(args.prior_source_review, baseline, inventory, inventory['changes'])
             if args.output:
                 try:
                     relative_output = args.output.resolve().relative_to(args.source_tree.resolve()).as_posix()

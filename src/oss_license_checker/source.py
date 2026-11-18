@@ -146,6 +146,13 @@ def render_source(inventory, format):
         # Non-JSON comparisons retain current candidates alongside the change rows.
         fields = ['kind_or_change', 'path', 'file_count', 'review_state']
         rows = [[change['change'], change['path'], 1, change['review_state']] for change in inventory['changes']] + rows
+    if 'prior_review' in inventory:
+        prior = inventory['prior_review']
+        rechecks = sum(item['follow_up'] == 'recheck' for item in prior)
+        summary += f" Prior review: {len(prior)} records, {rechecks} to recheck."
+        fields = ['kind_or_change', 'path_or_component', 'file_count_or_previous_state', 'review_state_or_follow_up']
+        rows = [['prior_review_changed_candidate' if item['candidate_changed'] else 'prior_review',
+                 item['component'], item['previous_state'], item['follow_up']] for item in prior] + rows
     if format == 'csv':
         stream = io.StringIO(newline='')
         writer = csv.writer(stream); writer.writerow(fields); writer.writerows(rows)

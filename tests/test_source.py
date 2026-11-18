@@ -134,6 +134,54 @@ class SourceReviewAcceptanceTests(unittest.TestCase):
         self.assertEqual(report['distribution_readiness'], 'not_assessed')
         self.assertGreater(validate(report['review_draft'])['open_requirements'], 0)
 
+    def test_prior_review_is_historical_and_closed_items_need_rechecking_on_tree_change(self):
+        with tempfile.TemporaryDirectory() as directory:
+            baseline, prior = Path(directory) / 'baseline.json', Path(directory) / 'prior.json'
+            inventory = scan_source(self.root)
+            baseline.write_text(render_source(inventory, 'json'))
+            record = review_draft(inventory)
+            record['distribution'].update(scope_confirmed=True, artifact_sha256='a' * 64)
+            record['evidence'].append({'id': 'inspection', 'kind': 'artifact_inspection',
+                                       'location': 'example:inspection', 'sha256': 'b' * 64,
+                                       'artifact_sha256': 'a' * 64, 'description': 'Example review'})
+            closed_ids = set()
+            for component, requirement in zip(record['components'], record['requirements']):
+                if component['name'] in {'vendor', 'LICENSE'}:
+                    component.update(inclusion='bundled', review_state='reviewed')
+                    requirement.update(state='done', reviewed_by='example', reviewed_at='2026-11-18T00:00:00Z',
+                                       evidence_refs=['source-tree', 'inspection'])
+                    closed_ids.add(requirement['id'])
+            validate(record)
+            prior.write_text(json.dumps(record))
+            original = prior.read_bytes()
+            args = ['--source-tree', str(self.root), '--baseline', str(baseline),
+                    '--prior-source-review', str(prior), '--format', 'json']
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                self.assertEqual(main(args), 0)
+            unchanged = json.loads(output.getvalue())
+            self.assertEqual({item['id'] for item in unchanged['prior_review'] if item['follow_up'] == 'historical'},
+                             closed_ids)
+
+            (self.root / 'vendor/code.py').write_text('changed')
+            self.git('add', 'vendor/code.py')
+            self.git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'changed')
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                self.assertEqual(main([*args, '--fail-on-change']), 1)
+            changed = json.loads(output.getvalue())
+            self.assertEqual({item['id'] for item in changed['prior_review'] if item['follow_up'] == 'recheck'},
+                             closed_ids)
+            self.assertEqual([item['component'] for item in changed['prior_review'] if item['candidate_changed']],
+                             ['vendor'])
+            self.assertTrue(all(item['state'] == 'needs_review' for item in changed['review_draft']['requirements']))
+            self.assertEqual(prior.read_bytes(), original)
+            with contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(main([*args, '--output', str(prior)]), 2)
+                record['evidence'][0]['location'] = 'git-tree:wrong'
+                prior.write_text(json.dumps(record))
+                self.assertEqual(main(args), 2)
+
     def test_baseline_must_match_real_git_objects_and_may_not_be_overwritten(self):
         inventory = scan_source(self.root)
         baseline = self.root / 'baseline.json'
