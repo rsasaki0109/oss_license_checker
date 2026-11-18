@@ -10,7 +10,7 @@
 
 目的は、OSSを公開・配布する前に依存ライセンスと未確認事項を把握し、対応漏れを防ぐことです。[目的と受け入れ条件](docs/PRODUCT_GOALS.md) · [検証記録](docs/RELEASE_CANDIDATE.md) · [変更履歴](CHANGELOG.md)
 
-[配布対応を追跡する設計案](docs/DISTRIBUTION_REVIEW_DESIGN.md)では、配布物・必要な対応・証拠・未対応を結びつける記録を検討しています。配布可否の判定機能はまだありません。
+[配布対応を追跡する設計案](docs/DISTRIBUTION_REVIEW_DESIGN.md)では、配布物・必要な対応・証拠・未対応を結びつける記録を検討しています。[ソース公開の確認候補を作る](docs/SOURCE_INVENTORY.md)モードも用意しています。配布可否の判定機能はまだありません。
 
 [自作OSSのCalibrexでの検証結果](docs/CALIBREX_VALIDATION.md)：コア依存とextrasを検査し、不明なライセンスと証拠ファイルの欠落を確認しました。
 

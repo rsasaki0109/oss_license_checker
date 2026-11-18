@@ -19,6 +19,7 @@ from .bundle import create_bundle
 from .markdown import render_markdown
 from .output import validate_output_paths, write_report
 from .environment import installed_distributions
+from .source import scan_source, render_source
 
 
 def normalize(name):
@@ -178,6 +179,8 @@ def main(argv=None):
     parser.add_argument("packages", nargs="*", help="Installed package names (default: entire environment)")
     parser.add_argument("--format", choices=["table", "json", "csv", "html", "markdown"], default="table")
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--source-tree", type=Path, help="Inventory a Git repository's committed source tree for publication review")
+    parser.add_argument("--source-ref", help="Commit or ref to inspect with --source-tree (default: HEAD)")
     parser.add_argument("--license-bundle", type=Path, help="Collect installed LICENSE/NOTICE evidence and manifest into a ZIP")
     parser.add_argument("--fail-missing-license-files", action="store_true", help="Fail on missing evidence; requires --license-bundle")
     parser.add_argument("--baseline", type=Path, help="Compare with a previous JSON inventory")
@@ -189,6 +192,25 @@ def main(argv=None):
     parser.add_argument("--fail-unknown", action=argparse.BooleanOptionalAction, default=None)
     args = parser.parse_args(argv)
     try:
+        if args.source_ref is not None and not args.source_tree:
+            raise ValueError('--source-ref requires --source-tree')
+        if args.source_tree:
+            if any([args.packages, args.recursive, args.config, args.baseline, args.license_bundle,
+                    args.allow is not None, args.deny is not None, args.fail_unknown is not None,
+                    args.fail_on_change, args.fail_missing_license_files]):
+                raise ValueError('Source inventory cannot be combined with installed-package policy, dependency, baseline or bundle options')
+            inventory = scan_source(args.source_tree, args.source_ref or 'HEAD')
+            if args.output:
+                try:
+                    relative_output = args.output.resolve().relative_to(args.source_tree.resolve()).as_posix()
+                except ValueError:
+                    relative_output = None
+                if relative_output in {entry['path'] for entry in inventory['files']}:
+                    raise ValueError('Source report must not overwrite a tracked file in the inspected tree')
+                write_report(args.output, render_source(inventory, args.format))
+            else:
+                sys.stdout.write(render_source(inventory, args.format))
+            return 0
         if args.fail_missing_license_files and not args.license_bundle:
             raise ValueError("--fail-missing-license-files requires --license-bundle")
         validate_output_paths(args.output, args.license_bundle, args.config, args.baseline)
