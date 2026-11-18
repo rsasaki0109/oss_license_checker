@@ -1,4 +1,5 @@
 import contextlib
+from html import unescape
 import io
 import json
 from pathlib import Path
@@ -8,6 +9,7 @@ import unittest
 
 from oss_license_checker.cli import main
 from oss_license_checker.source import scan_source, render_source, review_draft
+from oss_license_checker.source import load_source_baseline, source_changes
 from scripts.validate_distribution_review import validate
 
 
@@ -92,3 +94,89 @@ class SourceReviewAcceptanceTests(unittest.TestCase):
         inventory = scan_source(self.root)
         self.assertIn(('submodule_review', 'nested-submodule'), [(f['kind'], f['path']) for f in inventory['findings']])
         self.assertFalse(any(f['path'].startswith('nested-submodule/') for f in inventory['files']))
+
+    def test_changed_source_and_removed_license_create_open_review_tasks(self):
+        before = scan_source(self.root)
+        baselines = tempfile.TemporaryDirectory()
+        self.addCleanup(baselines.cleanup)
+        baseline = Path(baselines.name) / 'baseline.json'
+        baseline.write_text(render_source(before, 'json'))
+        (self.root / 'LICENSE').unlink()
+        (self.root / 'vendor/code.py').write_text('changed copied source')
+        (self.root / 'docs/assets/new.png').write_text('new asset')
+        self.git('add', '-A')
+        self.git('update-index', '--chmod=+x', 'normal.py')
+        self.git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'source changes')
+        after = scan_source(self.root)
+        changes = source_changes(load_source_baseline(baseline, self.root), after)
+        by_path = {item['path']: item for item in changes}
+        self.assertEqual(by_path['LICENSE']['change'], 'removed')
+        self.assertEqual(by_path['docs/assets/new.png']['change'], 'added')
+        self.assertEqual(by_path['vendor/code.py']['change'], 'changed')
+        self.assertNotEqual(by_path['normal.py']['before']['mode'], by_path['normal.py']['after']['mode'])
+        self.assertEqual(len(changes), 4)
+        after.update(baseline_commit=before['commit'], changes=changes)
+        draft = review_draft(after)
+        self.assertTrue(all(item['state'] == 'needs_review' for item in draft['requirements']))
+        self.assertEqual(validate(draft)['distribution_readiness'], 'not_assessed')
+        self.assertEqual(sum(c['id'].startswith('change:') for c in draft['components']), len(changes))
+
+    def test_same_source_remains_unreviewed_and_has_no_change_failure(self):
+        inventory = scan_source(self.root)
+        baseline = self.root / 'baseline.json'
+        baseline.write_text(render_source(inventory, 'json'))
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            self.assertEqual(main(['--source-tree', str(self.root), '--baseline', str(baseline),
+                                   '--fail-on-change', '--format', 'json']), 0)
+        report = json.loads(output.getvalue())
+        self.assertEqual(report['changes'], [])
+        self.assertEqual(report['distribution_readiness'], 'not_assessed')
+        self.assertGreater(validate(report['review_draft'])['open_requirements'], 0)
+
+    def test_baseline_must_match_real_git_objects_and_may_not_be_overwritten(self):
+        inventory = scan_source(self.root)
+        baseline = self.root / 'baseline.json'
+        for invalid in [[], {'assessment':'source-inventory', 'commit':'HEAD'},
+                        {**inventory, 'files':[]}, {**inventory, 'files_sha256':'0'*64},
+                        {**inventory, 'tree':'0'*40}]:
+            baseline.write_text(json.dumps(invalid))
+            with self.subTest(invalid=type(invalid)), self.assertRaises(ValueError):
+                load_source_baseline(baseline, self.root)
+        baseline.write_text(render_source(inventory, 'json'))
+        original = baseline.read_bytes()
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(main(['--source-tree',str(self.root),'--baseline',str(baseline),'--output',str(baseline)]), 2)
+            self.assertEqual(main(['--source-tree',str(self.root),'--fail-on-change']), 2)
+        self.assertEqual(baseline.read_bytes(), original)
+
+    def test_changed_source_exit_code_and_report_survive_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            baseline, report = Path(directory)/'baseline.json', Path(directory)/'changes.json'
+            baseline.write_text(render_source(scan_source(self.root), 'json'))
+            (self.root/'vendor/code.py').write_text('changed')
+            self.git('add','vendor/code.py')
+            self.git('-c','user.name=Test','-c','user.email=test@example.invalid','commit','-qm','changed')
+            args=['--source-tree',str(self.root),'--baseline',str(baseline),'--format','json','--output',str(report)]
+            self.assertEqual(main(args),0)
+            self.assertEqual(main([*args,'--fail-on-change']),1)
+            data=json.loads(report.read_text())
+            self.assertEqual(len(data['changes']),1)
+            for format in ['html','markdown','csv','table']:
+                rendered=render_source(data,format)
+                self.assertIn('vendor/code.py',unescape(rendered))
+
+    def test_symlink_target_and_submodule_revision_changes_are_not_followed(self):
+        original = self.git('rev-parse', 'HEAD').decode().strip()
+        self.git('update-index', '--add', '--cacheinfo', '160000', original, 'nested-submodule')
+        self.git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'submodule baseline')
+        before = scan_source(self.root)
+        (self.root/'outside-link').unlink()
+        (self.root/'outside-link').symlink_to('/another/nonexistent/target')
+        self.git('add', 'outside-link')
+        self.git('update-index', '--cacheinfo', '160000', before['commit'], 'nested-submodule')
+        self.git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'reference changes')
+        changes = source_changes(before, scan_source(self.root))
+        self.assertEqual({item['path'] for item in changes}, {'outside-link','nested-submodule'})
+        self.assertTrue(all(item['change']=='changed' for item in changes))
+        self.assertTrue(all(item['before']['object_id'] != item['after']['object_id'] for item in changes))

@@ -90,10 +90,49 @@ def review_draft(inventory):
                            'kind': 'data' if finding['kind'] == 'data_or_image_candidate' else 'source_code'})
         requirements.append(requirement('review:' + finding['id'], finding['id'],
                                         'Review candidate ' + finding['path'] + ' (' + finding['kind'] + '); determine origin, applicable terms and required actions'))
+    evidence_records = [evidence]
+    if 'baseline_commit' in inventory:
+        evidence_records.append({'id': 'source-baseline', 'kind': 'source_reference',
+                                 'location': 'git-commit:' + inventory['baseline_commit'], 'sha256': None,
+                                 'artifact_sha256': None, 'description': 'Previous source tree verified against local Git objects'})
+    for change in inventory.get('changes', []):
+        id = 'change:' + hashlib.sha256(change['path'].encode()).hexdigest()
+        components.append({**component, 'id': id, 'name': change['path'],
+                           'evidence_refs': ['source-tree', 'source-baseline']})
+        task = requirement('review:' + id, id, 'Review ' + change['change'] + ' tracked path ' + change['path'])
+        task['evidence_refs'] = ['source-tree', 'source-baseline']
+        task['basis'] = 'Git entry change: ' + json.dumps({'before': change['before'], 'after': change['after']}, ensure_ascii=False)
+        requirements.append(task)
     return {'format': 'distribution-review-draft',
             'distribution': {'id': 'source-' + inventory['commit'], 'description': 'Source publication review at a fixed commit; final scope unconfirmed',
                              'kind': 'source', 'scope_confirmed': False, 'artifact_sha256': None},
-            'components': components, 'requirements': requirements, 'evidence': [evidence]}
+            'components': components, 'requirements': requirements, 'evidence': evidence_records}
+
+
+def load_source_baseline(path, repository):
+    document = json.loads(path.read_text(encoding='utf-8'))
+    if not isinstance(document, dict) or document.get('assessment') != 'source-inventory':
+        raise ValueError('Source baseline must be a source-inventory JSON report')
+    commit = document.get('commit')
+    if not isinstance(commit, str) or not re.fullmatch(r'(?:[a-f0-9]{40}|[a-f0-9]{64})', commit):
+        raise ValueError('Source baseline requires an immutable Git commit ID')
+    verified = scan_source(repository, commit)
+    for key in ['tree', 'files', 'files_sha256', 'file_count']:
+        if document.get(key) != verified[key] or type(document.get(key)) is not type(verified[key]):
+            raise ValueError(f'Source baseline {key} does not match the referenced Git commit')
+    return verified
+
+
+def source_changes(before, after):
+    previous = {entry['path']: entry for entry in before['files']}
+    current = {entry['path']: entry for entry in after['files']}
+    changes = []
+    for path in sorted(previous.keys() | current.keys()):
+        old, new = previous.get(path), current.get(path)
+        if old != new:
+            changes.append({'path': path, 'change': 'added' if old is None else 'removed' if new is None else 'changed',
+                            'before': old, 'after': new, 'review_state': 'needs_review'})
+    return changes
 
 
 def render_source(inventory, format):
@@ -102,6 +141,11 @@ def render_source(inventory, format):
     fields = ['kind', 'path', 'file_count', 'review_state']
     rows = [[finding[field] for field in fields] for finding in inventory['findings']]
     summary = f"Source inventory: {inventory['file_count']} tracked entries. Commit: {inventory['commit']}. Distribution readiness: not assessed."
+    if 'changes' in inventory:
+        summary += f" Baseline: {inventory['baseline_commit']}. Changed entries: {len(inventory['changes'])}."
+        # Non-JSON comparisons retain current candidates alongside the change rows.
+        fields = ['kind_or_change', 'path', 'file_count', 'review_state']
+        rows = [[change['change'], change['path'], 1, change['review_state']] for change in inventory['changes']] + rows
     if format == 'csv':
         stream = io.StringIO(newline='')
         writer = csv.writer(stream); writer.writerow(fields); writer.writerows(rows)

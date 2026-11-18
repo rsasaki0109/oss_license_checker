@@ -21,7 +21,27 @@ oss-license-checker --source-tree /path/to/repository --source-ref HEAD \
 
 JSONには全一覧と記録のドラフトを含みます。HTML・Markdown・ターミナルは範囲・限界と候補を表示し、CSVは候補一覧のみです。完全なprovenanceが必要な場合はJSONも保存してください。
 
-検査を実行できれば終了コード0、無効なref・非Gitディレクトリ・不適切なオプション等は2です。0は「棚卸しを作れた」という意味で、配布承認ではありません。常に `distribution_readiness: not_assessed` とし、第三者素材や違反を自動断定しません。検査対象コミットにあるファイルを `--output` で上書きする指定も拒否します。
+通常は検査を実行できれば終了コード0、無効なref・非Gitディレクトリ・不適切なオプション等は2です。差分モードの `--fail-on-change` は変更時に1を返します。0は「棚卸しを作れた」という意味で、配布承認ではありません。常に `distribution_readiness: not_assessed` とし、第三者素材や違反を自動断定しません。検査対象コミットにあるファイルを `--output` で上書きする指定も拒否します。
+
+## 前回のソースとの差分
+
+```bash
+# 親コミットの棚卸しを基準として保存（親のGitオブジェクトが手元に必要）
+oss-license-checker --source-tree /path/to/repository --source-ref 'HEAD^' \
+  --format json --output source-baseline.json
+
+# 現在のコミットを比較。変更があれば1を返し、レポートは保存する
+oss-license-checker --source-tree /path/to/repository --source-ref HEAD \
+  --baseline source-baseline.json --fail-on-change \
+  --format json --output source-changes.json
+```
+
+- 追跡パスの `added` / `removed` / `changed` を検出します。変更の判定はGit object ID・mode・object typeで行い、内容・実行権限・リンクやサブモジュールの参照変更を拾います。renameは削除と追加として扱います。
+- ヒューリスティックの候補に一致しない通常のコードも比較します。候補0件でも、公開ソースへの新しいコピー等を見逃さないためです。ただし差分の検出自体はライセンス変更や違反の判定ではありません。
+- JSONの `changes` に変更前後のエントリを残します。HTML・Markdown・ターミナル・CSVでは変更行と現在の候補を表示し、変更行の種類は `added` / `removed` / `changed` です。
+- 変更した各パスは `review_draft` に新しい未確認記録として追加します。過去の完了・承認状態は自動で引き継ぎません。差分がなくても現在の候補と範囲確認の未確認記録は残ります。
+- 基準にはソース検査のJSONのみを使えます。GitコミットID・tree・一覧・件数・一覧ハッシュを、手元のGitオブジェクトから再確認します。異なる内容の一覧、不正なJSON、パッケージ一覧、基準を出力先で上書きする指定は終了コード2です。
+- 比較元のコミットがないshallow cloneでは、そのコミットを明示的にfetchしてから再実行してください。基準は入力として固定し、人が編集したレビュー記録とは別に管理します。検証するのはGit snapshotとの一致で、過去のレビュー判断の正当性ではありません。
 
 ## 配布対応記録へつなげる
 
@@ -31,7 +51,7 @@ python -m pip install -e '.[test]'
 python scripts/validate_distribution_review.py source-review.json
 ```
 
-ドラフトを別ファイルに保存し、各候補の出典・適用条件・対応内容・実配布物を確認して記録を更新します。再検査は新しいJSONへ出力し、人が更新したレビュー記録を自動で上書きしない運用にします。既存のPython依存向け `--baseline`・ポリシー・ZIP収集とは混在させません。
+ドラフトを別ファイルに保存し、各候補の出典・適用条件・対応内容・実配布物を確認して記録を更新します。再検査は新しいJSONへ出力し、人が更新したレビュー記録を自動で上書きしない運用にします。Python依存検査の基準JSON・ポリシー・ZIP収集とは混在させません。
 
 ## Calibrexでの受け入れ確認
 
@@ -41,5 +61,7 @@ python scripts/validate_distribution_review.py source-review.json
 - `tools/external` を外部素材の候補として取得。
 - `docs/assets`・リソース・データ類を確認候補にし、由来や権利を断定しない。
 - `license_boundaries.md` のような説明文も名前で候補になり得ます。本文がライセンスそのものとは自動判定しません。
+
+同じコミットの再比較では変更0件・終了コード0でした。親コミット `0e90966d6bb56a4529ea25c3f77c21167ed1cd97` との実履歴比較では、README・`docs/getting_started.md`・`docs/tutorials/your_own_data.md` の3件の変更を検出し、`--fail-on-change` で1を返しました。候補10件と範囲確認に変更パス3件を加えた14件の未確認記録を生成し、記録の検証も通過しました。この履歴差分をライセンス違反とは判定していません。
 
 これは権利者の網羅的な同定や、ソースコピーの類似性検出ではありません。名前を変えた第三者コード、未対応の拡張子、独自の同梱形式は見逃す可能性があります。候補数が少ないことやファイルが見つからないことを、義務がない証拠には使いません。合成fixtureの由来などは、manifest・生成元を引き続き確認します。

@@ -19,7 +19,7 @@ from .bundle import create_bundle
 from .markdown import render_markdown
 from .output import validate_output_paths, write_report
 from .environment import installed_distributions
-from .source import scan_source, render_source
+from .source import scan_source, render_source, load_source_baseline, source_changes
 
 
 def normalize(name):
@@ -195,11 +195,18 @@ def main(argv=None):
         if args.source_ref is not None and not args.source_tree:
             raise ValueError('--source-ref requires --source-tree')
         if args.source_tree:
-            if any([args.packages, args.recursive, args.config, args.baseline, args.license_bundle,
+            if any([args.packages, args.recursive, args.config, args.license_bundle,
                     args.allow is not None, args.deny is not None, args.fail_unknown is not None,
-                    args.fail_on_change, args.fail_missing_license_files]):
-                raise ValueError('Source inventory cannot be combined with installed-package policy, dependency, baseline or bundle options')
+                    args.fail_missing_license_files]):
+                raise ValueError('Source inventory cannot be combined with installed-package policy, dependency or bundle options')
+            if args.fail_on_change and not args.baseline:
+                raise ValueError('--fail-on-change requires --baseline')
+            validate_output_paths(report=args.output, baseline=args.baseline)
+            baseline = load_source_baseline(args.baseline, args.source_tree) if args.baseline else None
             inventory = scan_source(args.source_tree, args.source_ref or 'HEAD')
+            if baseline is not None:
+                inventory['baseline_commit'] = baseline['commit']
+                inventory['changes'] = source_changes(baseline, inventory)
             if args.output:
                 try:
                     relative_output = args.output.resolve().relative_to(args.source_tree.resolve()).as_posix()
@@ -210,7 +217,7 @@ def main(argv=None):
                 write_report(args.output, render_source(inventory, args.format))
             else:
                 sys.stdout.write(render_source(inventory, args.format))
-            return 0
+            return 1 if args.fail_on_change and inventory.get('changes') else 0
         if args.fail_missing_license_files and not args.license_bundle:
             raise ValueError("--fail-missing-license-files requires --license-bundle")
         validate_output_paths(args.output, args.license_bundle, args.config, args.baseline)
