@@ -1,0 +1,15 @@
+{
+  "source_commit": "75bbb1528f967ace2439b69627529a5d65585531",
+  "checker_design_state": "draft; no distribution approval",
+  "selected_distribution": "source publication (confirmed by project owner)",
+  "tracked_file_count": 28434,
+  "tracked_paths_sha256": "bce5830e17d2853bc2161f78dcd31946223c9a950e9545f380ef70c176f97266",
+  "named_native_library_or_wheel_paths": [],
+  "third_party_review_candidates": [
+    "docs/assets/evidence-demos/source/comma/",
+    "tools/external/li_init/"
+  ],
+  "synthetic_fixture_manifest": "src/calibrex/resources/kitti_lidar_camera_evidence/manifest.yaml",
+  "fixture_manifest_description": "Manifest declares a small synthetic KITTI-raw-shaped fixture; this is not a finding of redistributed real KITTI recordings",
+  "limits": "Path inventory and selected text inspection only; does not detect renamed binaries, copied code without notices, all dataset rights or legal fulfillment"
+}

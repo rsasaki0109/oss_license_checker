@@ -1,0 +1,160 @@
+{
+  "format": "distribution-review-draft",
+  "distribution": {
+    "id": "calibrex-source-publication",
+    "description": "Source publication selected by the project owner; exact published paths and included third-party material remain under review",
+    "kind": "source",
+    "scope_confirmed": false,
+    "artifact_sha256": null
+  },
+  "components": [
+    {
+      "id": "mcap",
+      "inclusion": "unknown",
+      "inclusion_basis": "Installed dependency of the selected extras; presence in the distributed artifact is unconfirmed",
+      "review_state": "reviewed",
+      "license_expression": "MIT",
+      "evidence_refs": [
+        "mcap-license"
+      ],
+      "name": "mcap",
+      "revision": "1.6.0",
+      "kind": "python_distribution"
+    },
+    {
+      "id": "scipy",
+      "inclusion": "unknown",
+      "inclusion_basis": "Installed runtime dependency; whether the distribution includes the wheel and bundled libraries is unconfirmed",
+      "review_state": "needs_review",
+      "license_expression": null,
+      "evidence_refs": [
+        "scipy-license"
+      ],
+      "name": "scipy",
+      "revision": "1.18.1",
+      "kind": "python_distribution"
+    },
+    {
+      "id": "comma-material",
+      "name": "comma2k19 copied code/data",
+      "kind": "data",
+      "revision": "4c7f1a6e1957745beadc1def0e7225f559b09a2a",
+      "inclusion": "unknown",
+      "inclusion_basis": "Paths observed in the tracked source tree; exact publication scope is not yet fixed",
+      "review_state": "needs_review",
+      "license_expression": null,
+      "evidence_refs": [
+        "source-tree"
+      ]
+    },
+    {
+      "id": "synthetic-fixture",
+      "name": "KITTI-shaped synthetic fixture",
+      "kind": "data",
+      "revision": "75bbb1528f967ace2439b69627529a5d65585531",
+      "inclusion": "unknown",
+      "inclusion_basis": "Paths observed in the tracked source tree; exact publication scope is not yet fixed",
+      "review_state": "needs_review",
+      "license_expression": null,
+      "evidence_refs": [
+        "source-tree"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "mcap-license",
+      "kind": "collected_license",
+      "location": "review-evidence/mcap-LICENSE.txt",
+      "sha256": "da11235665c17d4c1634072dae92b8ba1b38d6fdde2ccf19a6bbede33253f58d",
+      "artifact_sha256": null,
+      "description": "Retrieved upstream MIT license. Does not prove it is included in a distributed artifact."
+    },
+    {
+      "id": "scipy-license",
+      "kind": "source_reference",
+      "location": "installed:scipy-1.18.1.dist-info/LICENSE.txt",
+      "sha256": "17e7db9ffa4913121fa2df484633a362456a482da736c99db4711a98473770ea",
+      "artifact_sha256": null,
+      "description": "Observed Linux wheel license includes bundled libraries and runtime exceptions; requires further review."
+    },
+    {
+      "id": "source-tree",
+      "kind": "source_reference",
+      "location": "source-scope-observations.json",
+      "sha256": "b165f7047c8e797119290b24b5282fd831484a8f2dc1533bd0567b1bf82f3ad9",
+      "artifact_sha256": null,
+      "description": "Tracked path inventory and selected license/provenance observations at the fixed source commit; not an artifact fulfillment inspection"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "scope",
+      "component_ref": "scipy",
+      "kind": "scope_review",
+      "description": "Confirm the exact paths and third-party material included in the source publication",
+      "basis": "Obligations depend on the actual artifact and inclusion of dependencies",
+      "state": "needs_review",
+      "reason": "Distribution scope and artifact are not yet confirmed",
+      "evidence_refs": [],
+      "reviewed_by": null,
+      "reviewed_at": null
+    },
+    {
+      "id": "mcap-copy",
+      "component_ref": "mcap",
+      "kind": "license_copy",
+      "description": "Determine whether any mcap material is copied into the published source and which notices apply",
+      "basis": "Reviewed upstream MIT license; applicability depends on inclusion in the distributed artifact",
+      "state": "needs_review",
+      "reason": "A runtime dependency alone does not establish that mcap is redistributed with the source",
+      "evidence_refs": [
+        "mcap-license"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null
+    },
+    {
+      "id": "scipy-review",
+      "component_ref": "scipy",
+      "kind": "license_review",
+      "description": "Determine whether SciPy code or binaries are included in the published source; do not infer redistribution from runtime dependencies",
+      "basis": "SciPy wheel includes multiple license declarations; do not replace them with a single BSD assumption",
+      "state": "needs_review",
+      "reason": "Source publication selected; source-tree content and exact publication scope need confirmation",
+      "evidence_refs": [
+        "scipy-license"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null
+    },
+    {
+      "id": "comma-review",
+      "component_ref": "comma-material",
+      "kind": "license_review",
+      "description": "Check rights, attribution and source notices for copied comma2k19 materials included in the source publication",
+      "basis": "Observed source-tree paths and manifest/receipt require source-publication-specific review",
+      "state": "needs_review",
+      "reason": "Content provenance and applicable terms are not yet fully reviewed",
+      "evidence_refs": [
+        "source-tree"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null
+    },
+    {
+      "id": "fixture-review",
+      "component_ref": "synthetic-fixture",
+      "kind": "license_review",
+      "description": "Verify synthetic fixture provenance and generator ownership; do not assume real KITTI data rights from directory names",
+      "basis": "Observed source-tree paths and manifest/receipt require source-publication-specific review",
+      "state": "needs_review",
+      "reason": "Content provenance and applicable terms are not yet fully reviewed",
+      "evidence_refs": [
+        "source-tree"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null
+    }
+  ]
+}

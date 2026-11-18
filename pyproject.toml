@@ -12,6 +12,9 @@ license-files = ["LICENSE"]
 requires-python = ">=3.11"
 dependencies = ["packaging>=24.2"]
 
+[project.optional-dependencies]
+test = ["jsonschema>=4.18"]
+
 [project.urls]
 Repository = "https://github.com/rsasaki0109/oss_license_checker"
 Documentation = "https://github.com/rsasaki0109/oss_license_checker#readme"
